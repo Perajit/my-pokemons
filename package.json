@@ -1,0 +1,17 @@
+{
+  "name": "my-pokemons",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@10.32.0",
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "^3.8.3",
+    "turbo": "latest"
+  }
+}
