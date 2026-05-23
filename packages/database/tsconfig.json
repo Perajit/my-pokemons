@@ -1,0 +1,5 @@
+{
+  "extends": "@my-pokemons/config/tsconfig",
+  "compilerOptions": { "outDir": "dist" },
+  "include": ["src"]
+}
