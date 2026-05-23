@@ -1,0 +1,65 @@
+import { test, expect } from "@playwright/test";
+
+const USER = {
+  email: `test-${Date.now()}@example.com`,
+  password: "password123",
+};
+
+test("unauthenticated user is redirected to /login", async ({ page }) => {
+  await page.goto("/");
+  await expect(page).toHaveURL(/login/);
+});
+
+test("register creates account and redirects to /", async ({ page }) => {
+  await page.goto("/register");
+  await page.fill("[name=email]", USER.email);
+  await page.fill("[name=password]", USER.password);
+  await page.click("[type=submit]");
+  await expect(page).toHaveURL("/");
+  await expect(page.getByText(USER.email)).toBeVisible();
+});
+
+test("login with valid credentials redirects to /", async ({ page }) => {
+  await page.goto("/login");
+  await page.fill("[name=email]", USER.email);
+  await page.fill("[name=password]", USER.password);
+  await page.click("[type=submit]");
+  await expect(page).toHaveURL("/");
+});
+
+test("login with wrong password shows inline error", async ({ page }) => {
+  await page.goto("/login");
+  await page.fill("[name=email]", USER.email);
+  await page.fill("[name=password]", "wrongpassword");
+  await page.click("[type=submit]");
+  await expect(page.getByText("Invalid email or password")).toBeVisible();
+  await expect(page).toHaveURL(/login/);
+});
+
+test("register with duplicate email shows inline error", async ({ page }) => {
+  await page.goto("/register");
+  await page.fill("[name=email]", USER.email);
+  await page.fill("[name=password]", USER.password);
+  await page.click("[type=submit]");
+  await expect(page.getByText("Email already in use")).toBeVisible();
+});
+
+test("session persists on page refresh", async ({ page }) => {
+  await page.goto("/login");
+  await page.fill("[name=email]", USER.email);
+  await page.fill("[name=password]", USER.password);
+  await page.click("[type=submit]");
+  await expect(page).toHaveURL("/");
+  await page.reload();
+  await expect(page).toHaveURL("/");
+});
+
+test("logout redirects to /login", async ({ page }) => {
+  await page.goto("/login");
+  await page.fill("[name=email]", USER.email);
+  await page.fill("[name=password]", USER.password);
+  await page.click("[type=submit]");
+  await expect(page).toHaveURL("/");
+  await page.click("[type=submit]"); // logout button
+  await expect(page).toHaveURL(/login/);
+});
