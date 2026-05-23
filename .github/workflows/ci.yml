@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: my_pokemons_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/my_pokemons_test
+      DATABASE_URL_TEST: postgresql://postgres:postgres@localhost:5432/my_pokemons_test
+      AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.32.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Apply schema to test DB
+        run: pnpm --filter @my-pokemons/database db:push --skip-generate
+
+      - name: Format check
+        run: pnpm format:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Unit & component tests
+        run: pnpm --filter @my-pokemons/web test
+
+      - name: Integration tests
+        run: pnpm --filter @my-pokemons/web test:integration
+
+      - name: Build
+        run: pnpm build
