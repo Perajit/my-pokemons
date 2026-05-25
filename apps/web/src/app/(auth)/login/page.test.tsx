@@ -32,7 +32,9 @@ describe("LoginPage", () => {
     render(<LoginPage />);
 
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(/password/i, { selector: "input" }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /login/i })).toBeEnabled();
     expect(
       screen.getByRole("link", { name: /create an account/i }),
@@ -44,7 +46,10 @@ describe("LoginPage", () => {
     render(<LoginPage />);
 
     await user.type(screen.getByLabelText(/email/i), "a@b.com");
-    await user.type(screen.getByLabelText(/password/i), "secret123");
+    await user.type(
+      screen.getByLabelText(/password/i, { selector: "input" }),
+      "secret123",
+    );
     await user.click(screen.getByRole("button", { name: /login/i }));
 
     await waitFor(() => expect(mockAction).toHaveBeenCalledTimes(1));
@@ -60,7 +65,10 @@ describe("LoginPage", () => {
     render(<LoginPage />);
 
     await user.type(screen.getByLabelText(/email/i), "a@b.com");
-    await user.type(screen.getByLabelText(/password/i), "wrong");
+    await user.type(
+      screen.getByLabelText(/password/i, { selector: "input" }),
+      "wrong",
+    );
     await user.click(screen.getByRole("button", { name: /login/i }));
 
     expect(
@@ -84,7 +92,10 @@ describe("LoginPage", () => {
     render(<LoginPage />);
 
     await user.type(screen.getByLabelText(/email/i), "not-an-email");
-    await user.type(screen.getByLabelText(/password/i), "anything");
+    await user.type(
+      screen.getByLabelText(/password/i, { selector: "input" }),
+      "anything",
+    );
     await user.click(screen.getByRole("button", { name: /login/i }));
 
     await waitFor(() => expect(mockAction).toHaveBeenCalledTimes(1));
@@ -96,12 +107,17 @@ describe("LoginPage", () => {
     render(<LoginPage />);
 
     await user.type(screen.getByLabelText(/email/i), "a@b.com");
-    await user.type(screen.getByLabelText(/password/i), "wrong");
+    await user.type(
+      screen.getByLabelText(/password/i, { selector: "input" }),
+      "wrong",
+    );
     await user.click(screen.getByRole("button", { name: /login/i }));
 
     await screen.findByText("Invalid email or password");
     expect(screen.getByLabelText(/email/i)).toHaveValue("a@b.com");
-    expect(screen.getByLabelText(/password/i)).toHaveValue("wrong");
+    expect(
+      screen.getByLabelText(/password/i, { selector: "input" }),
+    ).toHaveValue("wrong");
   });
 
   it("disables the button and shows pending text while submitting", async () => {
@@ -116,7 +132,10 @@ describe("LoginPage", () => {
     render(<LoginPage />);
 
     await user.type(screen.getByLabelText(/email/i), "a@b.com");
-    await user.type(screen.getByLabelText(/password/i), "secret123");
+    await user.type(
+      screen.getByLabelText(/password/i, { selector: "input" }),
+      "secret123",
+    );
     await user.click(screen.getByRole("button", { name: /login/i }));
 
     await waitFor(() => {
@@ -130,5 +149,19 @@ describe("LoginPage", () => {
     await waitFor(() => {
       expect(screen.getByRole("button", { name: /login/i })).toBeEnabled();
     });
+  });
+
+  it("toggles password visibility when the eye button is clicked", async () => {
+    const user = userEvent.setup();
+    render(<LoginPage />);
+
+    const input = screen.getByLabelText(/password/i, { selector: "input" });
+    expect(input).toHaveAttribute("type", "password");
+
+    await user.click(screen.getByRole("button", { name: /show password/i }));
+    expect(input).toHaveAttribute("type", "text");
+
+    await user.click(screen.getByRole("button", { name: /hide password/i }));
+    expect(input).toHaveAttribute("type", "password");
   });
 });

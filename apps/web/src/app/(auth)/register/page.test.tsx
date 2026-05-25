@@ -195,4 +195,18 @@ describe("RegisterPage", () => {
       expect(screen.getByRole("button", { name: /register/i })).toBeEnabled();
     });
   });
+
+  it("toggles password visibility when the eye button is clicked", async () => {
+    const user = userEvent.setup();
+    render(<RegisterPage />);
+
+    const input = screen.getByLabelText(/^password/i, { selector: "input" });
+    expect(input).toHaveAttribute("type", "password");
+
+    await user.click(screen.getByRole("button", { name: /show password/i }));
+    expect(input).toHaveAttribute("type", "text");
+
+    await user.click(screen.getByRole("button", { name: /hide password/i }));
+    expect(input).toHaveAttribute("type", "password");
+  });
 });

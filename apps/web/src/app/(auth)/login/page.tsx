@@ -1,7 +1,7 @@
 "use client";
 import { useActionState, useState } from "react";
 import Link from "next/link";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import { loginAction } from "./actions";
 import { validateRequired } from "../validation";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,8 @@ export default function LoginPage() {
   const [serverError, action, pending] = useActionState(loginAction, null);
   const [values, setValues] = useState({ email: "", password: "" });
   const [touched, setTouched] = useState({ email: false, password: false });
+  const [showPassword, setShowPassword] = useState(false);
+
   const emailError = validateRequired(values.email, "Email");
   const passwordError = validateRequired(values.password, "Password");
 
@@ -75,23 +77,39 @@ export default function LoginPage() {
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="password">Password*</Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              placeholder="••••••••"
-              autoComplete="current-password"
-              required
-              value={values.password}
-              onChange={(e) =>
-                setValues((v) => ({ ...v, password: e.target.value }))
-              }
-              onBlur={() => setTouched((t) => ({ ...t, password: true }))}
-              aria-invalid={visiblePasswordError ? true : undefined}
-              aria-describedby={
-                visiblePasswordError ? "password-error" : undefined
-              }
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                autoComplete="current-password"
+                required
+                className="pr-10"
+                value={values.password}
+                onChange={(e) =>
+                  setValues((v) => ({ ...v, password: e.target.value }))
+                }
+                onBlur={() => setTouched((t) => ({ ...t, password: true }))}
+                aria-invalid={visiblePasswordError ? true : undefined}
+                aria-describedby={
+                  visiblePasswordError ? "password-error" : undefined
+                }
+              />
+              <button
+                type="button"
+                tabIndex={-1}
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showPassword ? (
+                  <EyeOff className="size-4" aria-hidden />
+                ) : (
+                  <Eye className="size-4" aria-hidden />
+                )}
+              </button>
+            </div>
             {visiblePasswordError && (
               <p id="password-error" className="text-sm text-destructive">
                 {visiblePasswordError}
