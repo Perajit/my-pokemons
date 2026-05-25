@@ -44,7 +44,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Apply schema to test DB
-        run: pnpm --filter @my-pokemons/database db:push --skip-generate
+        run: pnpm --filter @my-pokemons/database db:sync
 
       - name: Format check
         run: pnpm format:check
