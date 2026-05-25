@@ -40,25 +40,42 @@ describe("registerAction", () => {
   it("returns validation error for invalid email", async () => {
     const result = await registerAction(
       null,
-      makeFormData({ email: "bad-email", password: "password123" }),
+      makeFormData({ email: "bad-email", password: "Password1!" }),
     );
-    expect(result).toBe("Invalid email address");
+    expect(result).toBe("Enter a valid email address");
   });
 
-  it("returns validation error for short password", async () => {
+  it.each([
+    ["Pass1!", "at least 8 characters"],
+    ["password1!", "uppercase letter"],
+    ["PASSWORD1!", "lowercase letter"],
+    ["Password!", "number"],
+    ["Password1", "special character"],
+  ])(
+    "rejects password '%s' with the matching rule message",
+    async (password, rule) => {
+      const result = await registerAction(
+        null,
+        makeFormData({ email: "user@example.com", password }),
+      );
+      expect(result).toBe(`Password must satisfy: ${rule}`);
+    },
+  );
+
+  it("returns email error when email is empty", async () => {
     const result = await registerAction(
       null,
-      makeFormData({ email: "user@example.com", password: "short" }),
+      makeFormData({ email: "", password: "Password1!" }),
     );
-    expect(result).toBe("Password must be at least 8 characters");
+    expect(result).toBe("Email is required");
   });
 
-  it("returns error for missing fields", async () => {
+  it("returns password error when password is empty", async () => {
     const result = await registerAction(
       null,
-      makeFormData({ email: "", password: "" }),
+      makeFormData({ email: "user@example.com", password: "" }),
     );
-    expect(result).toBe("Email and password required");
+    expect(result).toBe("Password is required");
   });
 
   it("returns error when email already in use", async () => {
@@ -73,7 +90,7 @@ describe("registerAction", () => {
 
     const result = await registerAction(
       null,
-      makeFormData({ email: "user@example.com", password: "password123" }),
+      makeFormData({ email: "user@example.com", password: "Password1!" }),
     );
 
     expect(result).toBe("Email already in use");
@@ -90,11 +107,11 @@ describe("registerAction", () => {
       makeFormData({
         name: "Alice",
         email: "alice@example.com",
-        password: "password123",
+        password: "Password1!",
       }),
     );
 
-    expect(bcrypt.hash).toHaveBeenCalledWith("password123", 12);
+    expect(bcrypt.hash).toHaveBeenCalledWith("Password1!", 12);
     expect(db.user.create).toHaveBeenCalledWith({
       data: {
         name: "Alice",
@@ -104,7 +121,7 @@ describe("registerAction", () => {
     });
     expect(signIn).toHaveBeenCalledWith("credentials", {
       email: "alice@example.com",
-      password: "password123",
+      password: "Password1!",
       redirectTo: "/",
     });
   });
@@ -116,7 +133,7 @@ describe("registerAction", () => {
 
     await registerAction(
       null,
-      makeFormData({ email: "alice@example.com", password: "password123" }),
+      makeFormData({ email: "alice@example.com", password: "Password1!" }),
     );
 
     expect(db.user.create).toHaveBeenCalledWith({

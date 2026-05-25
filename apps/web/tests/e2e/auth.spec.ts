@@ -5,6 +5,8 @@ const USER = {
   password: "password123",
 };
 
+test.describe.configure({ mode: "serial" });
+
 test("unauthenticated user is redirected to /login", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveURL(/login/);
@@ -16,7 +18,7 @@ test("register creates account and redirects to /", async ({ page }) => {
   await page.fill("[name=password]", USER.password);
   await page.click("[type=submit]");
   await expect(page).toHaveURL("/");
-  await expect(page.getByText(USER.email)).toBeVisible();
+  await expect(page.getByRole("button", { name: /logout/i })).toBeVisible();
 });
 
 test("login with valid credentials redirects to /", async ({ page }) => {

@@ -20,6 +20,7 @@ import { authorizeUser } from "@/lib/auth-utils";
 import { db } from "@/lib/db";
 
 beforeEach(async () => {
+  await db.userPokemon.deleteMany();
   await db.user.deleteMany();
   vi.clearAllMocks();
 });

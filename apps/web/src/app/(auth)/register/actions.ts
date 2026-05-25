@@ -2,19 +2,23 @@
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { signIn } from "@/lib/auth";
-import { validateRegisterInput } from "./validation";
+import { validateEmail, validatePassword } from "../validation";
 
 export async function registerAction(
   _prevState: string | null,
   formData: FormData,
 ) {
   const name = (formData.get("name") as string) || undefined;
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
+  const email = (formData.get("email") as string) ?? "";
+  const password = (formData.get("password") as string) ?? "";
 
-  const validationError = validateRegisterInput(email, password);
-  if (validationError) {
-    return validationError;
+  const emailError = validateEmail(email);
+  if (emailError) {
+    return emailError;
+  }
+  const passwordError = validatePassword(password);
+  if (passwordError) {
+    return passwordError;
   }
 
   const existing = await db.user.findUnique({ where: { email } });

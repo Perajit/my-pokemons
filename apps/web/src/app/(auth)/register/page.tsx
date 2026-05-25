@@ -1,7 +1,9 @@
 "use client";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
+import { AlertCircle } from "lucide-react";
 import { registerAction } from "./actions";
+import { checkPasswordRules, validateEmail } from "../validation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,20 +15,43 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { cn } from "@/lib/utils";
 
 export default function RegisterPage() {
-  const [error, action, pending] = useActionState(registerAction, null);
+  const [serverError, action, pending] = useActionState(registerAction, null);
+  const [values, setValues] = useState({ name: "", email: "", password: "" });
+  const [touched, setTouched] = useState({ email: false, password: false });
+  const emailError = validateEmail(values.email);
+  const passwordRules = checkPasswordRules(values.password);
+  const passwordValid = passwordRules.every((r) => r.met);
+
+  const visibleEmailError = touched.email ? emailError : null;
+  const passwordInvalidVisible = touched.password && !passwordValid;
+
   return (
     <Card className="w-full max-w-sm py-6 shadow-xl">
       <CardHeader className="px-6 text-center">
         <CardTitle className="text-2xl">Create an account</CardTitle>
-        <CardDescription>Start collecting and raising Pokémon</CardDescription>
+        <CardDescription>
+          Collect and care for your Pokémon team
+        </CardDescription>
       </CardHeader>
       <CardContent className="px-6">
-        <form action={action} className="flex flex-col gap-4">
-          {error && (
+        <form
+          action={action}
+          onSubmit={(e) => {
+            setTouched({ email: true, password: true });
+            if (emailError || !passwordValid) {
+              e.preventDefault();
+            }
+          }}
+          noValidate
+          className="flex flex-col gap-4"
+        >
+          {serverError && (
             <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
+              <AlertCircle />
+              <AlertDescription>{serverError}</AlertDescription>
             </Alert>
           )}
           <div className="flex flex-col gap-1.5">
@@ -37,29 +62,69 @@ export default function RegisterPage() {
               type="text"
               placeholder="Your name (optional)"
               autoComplete="name"
+              value={values.name}
+              onChange={(e) =>
+                setValues((v) => ({ ...v, name: e.target.value }))
+              }
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">Email*</Label>
             <Input
               id="email"
               name="email"
               type="email"
               placeholder="you@example.com"
-              required
               autoComplete="email"
+              required
+              value={values.email}
+              onChange={(e) =>
+                setValues((v) => ({ ...v, email: e.target.value }))
+              }
+              onBlur={() => setTouched((t) => ({ ...t, email: true }))}
+              aria-invalid={visibleEmailError ? true : undefined}
+              aria-describedby={visibleEmailError ? "email-error" : undefined}
             />
+            {visibleEmailError && (
+              <p id="email-error" className="text-sm text-destructive">
+                {visibleEmailError}
+              </p>
+            )}
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">Password*</Label>
             <Input
               id="password"
               name="password"
               type="password"
-              placeholder="Min 8 characters"
-              required
+              placeholder="Create your password"
               autoComplete="new-password"
+              required
+              value={values.password}
+              onChange={(e) =>
+                setValues((v) => ({ ...v, password: e.target.value }))
+              }
+              onBlur={() => setTouched((t) => ({ ...t, password: true }))}
+              aria-invalid={passwordInvalidVisible ? true : undefined}
+              aria-describedby="password-requirements"
             />
+            <ul
+              id="password-requirements"
+              aria-label="Password requirements"
+              className="mt-1 space-y-0.5 text-sm"
+            >
+              {passwordRules.map((r) => (
+                <li
+                  key={r.key}
+                  className={cn(
+                    "flex items-center gap-1.5",
+                    r.met ? "text-green-600" : "text-muted-foreground",
+                  )}
+                >
+                  <span aria-hidden>{r.met ? "✓" : "○"}</span> {r.label}
+                </li>
+              ))}
+            </ul>
           </div>
           <Button type="submit" className="mt-2 w-full" disabled={pending}>
             {pending ? "Creating account…" : "Register"}

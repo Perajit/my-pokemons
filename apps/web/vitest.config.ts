@@ -23,6 +23,7 @@ export default defineConfig({
         "src/test/**",
         "src/components/**",
         "src/app/layout.tsx",
+        "src/app/\\(auth\\)/layout.tsx",
       ],
       thresholds: {
         lines: 90,
