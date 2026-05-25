@@ -41,7 +41,7 @@ describe("registerAction", () => {
   };
 
   it("creates a user row with the correct email", async () => {
-    await registerAction(null, makeForm("alice@example.com", "password123"));
+    await registerAction(null, makeForm("alice@example.com", "Password1!"));
 
     const user = await db.user.findUnique({
       where: { email: "alice@example.com" },
@@ -51,19 +51,19 @@ describe("registerAction", () => {
   });
 
   it("stores a bcrypt hash, not the plaintext password", async () => {
-    await registerAction(null, makeForm("alice@example.com", "password123"));
+    await registerAction(null, makeForm("alice@example.com", "Password1!"));
 
     const user = await db.user.findUnique({
       where: { email: "alice@example.com" },
     });
-    expect(user!.passwordHash).not.toBe("password123");
-    expect(await bcrypt.compare("password123", user!.passwordHash)).toBe(true);
+    expect(user!.passwordHash).not.toBe("Password1!");
+    expect(await bcrypt.compare("Password1!", user!.passwordHash)).toBe(true);
   });
 
   it("stores the optional name when provided", async () => {
     await registerAction(
       null,
-      makeForm("alice@example.com", "password123", "Alice"),
+      makeForm("alice@example.com", "Password1!", "Alice"),
     );
 
     const user = await db.user.findUnique({
@@ -73,10 +73,10 @@ describe("registerAction", () => {
   });
 
   it("returns an error for duplicate email without creating a second row", async () => {
-    await registerAction(null, makeForm("alice@example.com", "password123"));
+    await registerAction(null, makeForm("alice@example.com", "Password1!"));
     const result = await registerAction(
       null,
-      makeForm("alice@example.com", "password123"),
+      makeForm("alice@example.com", "Password1!"),
     );
 
     expect(result).toBe("Email already in use");
@@ -86,10 +86,10 @@ describe("registerAction", () => {
   it("returns a validation error without touching the DB", async () => {
     const result = await registerAction(
       null,
-      makeForm("not-an-email", "password123"),
+      makeForm("not-an-email", "Password1!"),
     );
 
-    expect(result).toBe("Invalid email address");
+    expect(result).toBe("Enter a valid email address");
     expect(await db.user.count()).toBe(0);
   });
 });

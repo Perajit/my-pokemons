@@ -7,6 +7,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
+    fileParallelism: false,
     alias: { "@": resolve(__dirname, "src") },
     include: ["tests/integration/**/*.test.ts"],
     setupFiles: ["./src/test/setup.ts"],
