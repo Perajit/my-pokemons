@@ -136,23 +136,26 @@ All functions are pure (no DB, no side effects). Called from API route handlers 
 
 1. Run shared sync steps (for all or one UserPokemon)
 2. Compute `calculateHeart(fullness, mood)` and `activeDays` for response
-3. Compute `checkCooldown(lastFedAt, ...)` and `checkCooldown(lastPlayedAt, ...)` — include in response for countdown timers
+3. Compute `cooldownEndsAt` for feed and play from `lastFedAt`/`lastPlayedAt` + cooldown minutes — client computes remaining seconds from `Date.now()` to avoid timer drift
 4. Return enriched data
 
-### POST /api/my-pokemons/[id]/feed
+### feedAction / playAction — server actions
 
-1. Run shared sync steps → **400** if fainted
-2. `checkCooldown(lastFedAt, FEED_COOLDOWN_MINUTES, now)` → **400** with `remainingSeconds` if blocked
+Business logic in `src/services/pokemon.ts`. Same pattern as `buyPokemonAction`.
+
+**feedAction(userPokemonId)**
+1. Run shared sync steps → throw `FaintedError` if fainted
+2. `checkCooldown(lastFedAt, FEED_COOLDOWN_MINUTES, now)` → throw `CooldownError` if blocked
 3. `newFullness = applyFeed(currentFullness, feedFullnessGain)`
 4. Add `feedCoinReward` to `user.coins`
-5. `newMilestones = checkMilestones(acquiredAt, faintedAt, existingBadges, MILESTONE_CONFIG)`
-6. For each in `newMilestones`: create `UserPokemonBadge` row, add `milestone.coinReward` to `user.coins`
-7. Set `lastFedAt=now`, save `UserPokemon` + `User` in DB transaction
-8. Return updated state + `newMilestones` (UI shows badge popup)
+5. `newMilestones = checkMilestones(...)` — wired up in milestones phase; skip for now
+6. Set `lastFedAt=now`, save `UserPokemon` + `User` in DB transaction
+7. `revalidatePath("/", "layout")` — refreshes coin balance
+8. Return `{ ok: true }` or `{ ok: false; error: string }`
 
-### POST /api/my-pokemons/[id]/play
+**playAction(userPokemonId)** — same pattern; substitute `lastPlayedAt`, `PLAY_COOLDOWN_MINUTES`, `applyPlay`, `playMoodGain`, `playCoinReward`
 
-Same as Feed — substitute `lastPlayedAt`, `PLAY_COOLDOWN_MINUTES`, `applyPlay`, `playMoodGain`, `playCoinReward`
+Note: cooldown is returned as `cooldownEndsAt: Date | null` (not `remainingSeconds`) so the client computes remaining time from `Date.now()` on each tick — prevents drift across background tabs and slow networks.
 
 ### buyPokemonAction — shop buy
 
@@ -180,7 +183,7 @@ AUTH_SECRET=
 
 # Gameplay phase
 FEED_COOLDOWN_MINUTES=30
-PLAY_COOLDOWN_MINUTES=30
+PLAY_COOLDOWN_MINUTES=20
 
 # Gameplay phase (client — NEXT_PUBLIC_ prefix required)
 NEXT_PUBLIC_POLLING_INTERVAL_MINUTES=5
@@ -209,9 +212,9 @@ Unit and component tests are colocated with their source as `*.test.ts` /
 tests live in `apps/web/tests/integration/`. E2E specs live in
 `apps/web/tests/e2e/`.
 
-### Per-change checks (definition of done)
+### Definition of done
 
-Run after any code change. All must pass before considering it done.
+All of the following must pass before an implementation is considered complete.
 
 ```bash
 pnpm --filter @my-pokemons/web test           # unit + component tests (Vitest)
@@ -226,12 +229,14 @@ When test files change, also verify coverage (90% threshold is enforced):
 pnpm --filter @my-pokemons/web test:coverage
 ```
 
-### Integration tests — run when DB logic changes
+When services, server actions, auth logic, DB schema, or API routes change, also run integration tests:
 
 ```bash
 DATABASE_URL_TEST=postgresql://postgres:postgres@localhost:5432/my_pokemons_test \
   pnpm --filter @my-pokemons/web test:integration
 ```
+
+Integration test files run sequentially (`fileParallelism: false`) because they share one test database and truncate tables in `beforeEach` — parallel execution causes files to delete each other's seed data mid-test.
 
 ### E2E — run occasionally, not on every change
 
