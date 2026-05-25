@@ -5,7 +5,7 @@ export function Pokeball({ className }: { className?: string }) {
     <div
       aria-hidden
       className={cn(
-        "relative aspect-square overflow-hidden rounded-full border-[3px] border-zinc-900 bg-white shadow-md",
+        "relative aspect-square shrink-0 overflow-hidden rounded-full border-[3px] border-zinc-900 bg-white shadow-md",
         className,
       )}
     >

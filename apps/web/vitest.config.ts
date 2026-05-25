@@ -23,6 +23,9 @@ export default defineConfig({
         "src/test/**",
         "src/components/**",
         "src/app/layout.tsx",
+        "src/app/\\(app\\)/layout.tsx",
+        "src/app/\\(app\\)/page.tsx",
+        "src/app/\\(app\\)/shop/page.tsx",
         "src/app/\\(auth\\)/layout.tsx",
       ],
       thresholds: {

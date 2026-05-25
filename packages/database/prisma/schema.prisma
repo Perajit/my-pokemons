@@ -8,9 +8,45 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
+  id           String        @id @default(cuid())
+  email        String        @unique
   name         String?
   passwordHash String
-  createdAt    DateTime @default(now())
+  coins        Int           @default(500)
+  createdAt    DateTime      @default(now())
+  userPokemons UserPokemon[]
+}
+
+model Pokemon {
+  id                   String        @id @default(cuid())
+  pokeApiId            Int           @unique
+  name                 String
+  description          String
+  price                Int
+  fullnessDecayPerHour Float
+  moodDecayPerHour     Float
+  feedFullnessGain     Float
+  feedCoinReward       Int
+  playMoodGain         Float
+  playCoinReward       Int
+  userPokemons         UserPokemon[]
+}
+
+model UserPokemon {
+  id               String    @id @default(cuid())
+  userId           String
+  pokemonId        String
+  currentFullness  Float     @default(60)
+  currentMood      Float     @default(60)
+  isActive         Boolean   @default(true)
+  faintedAt        DateTime?
+  lastFedAt        DateTime?
+  lastPlayedAt     DateTime?
+  lastCalculatedAt DateTime  @default(now())
+  acquiredAt       DateTime  @default(now())
+  user             User      @relation(fields: [userId], references: [id])
+  pokemon          Pokemon   @relation(fields: [pokemonId], references: [id])
+
+  @@index([userId])
+  @@index([userId, isActive])
 }

@@ -71,14 +71,15 @@ export const HEART_WEIGHTS = { fullness: 0.6, mood: 0.4 } as const;
 Schema lives in `packages/database/prisma/schema.prisma`.
 
 ```
-User             — id, email, passwordHash, name?, coins, createdAt
+User             — id, email, passwordHash, name?, coins (default 500), createdAt
 Pokemon          — id, pokeApiId*, name, description, price,
                    fullnessDecayPerHour, moodDecayPerHour,
                    feedFullnessGain, feedCoinReward,
                    playMoodGain, playCoinReward
-UserPokemon      — id, userId†, pokemonId, currentFullness, currentMood,
+UserPokemon      — id, userId†, pokemonId,
+                   currentFullness (default 60), currentMood (default 60),
                    isActive, faintedAt?, lastFedAt?, lastPlayedAt?,
-                   lastCalculatedAt, acquiredAt
+                   lastCalculatedAt (default now), acquiredAt (default now)
                    @@index([userId]), @@index([userId, isActive])
 UserPokemonBadge — id, userPokemonId, badge (BadgeType), earnedAt
                    @@unique([userPokemonId, badge])
@@ -93,7 +94,7 @@ Pokémon sprite URL: `https://raw.githubusercontent.com/PokeAPI/sprites/master/s
 
 ## packages/core — Game Logic Functions
 
-All functions are pure (no DB, no side effects). Called from API route handlers in `apps/web`.
+All functions are pure (no DB, no side effects). Called from API route handlers and services in `apps/web`.
 
 - `calculateElapsedHours(from, to)` — Returns hours between two dates.
   Called as the first step in every handler that reads a UserPokemon.
@@ -153,13 +154,18 @@ All functions are pure (no DB, no side effects). Called from API route handlers 
 
 Same as Feed — substitute `lastPlayedAt`, `PLAY_COOLDOWN_MINUTES`, `applyPlay`, `playMoodGain`, `playCoinReward`
 
-### POST /api/shop/buy/[pokemonId]
+### buyPokemonAction — shop buy
 
-1. Load Pokemon + `user.coins`
-2. If `user.coins < pokemon.price` → **400**
-3. Deduct `pokemon.price` from `user.coins`
-4. Create `UserPokemon`: `currentFullness=INITIAL_FULLNESS`, `currentMood=INITIAL_MOOD`, `lastCalculatedAt=now`, `acquiredAt=now`
-5. Save `User` + `UserPokemon` in DB transaction → return new UserPokemon
+Server action in `src/app/(app)/shop/actions.ts`; business logic in `src/services/shop.ts`.
+
+1. `auth()` → return `{ ok: false, error: "Unauthorized" }` if no session
+2. `db.pokemon.findUnique` → throw `NotFoundError` if not found
+3. Open interactive transaction:
+   - `tx.user.updateMany({ where: { id: userId, coins: { gte: price } } })` — atomically checks and deducts coins in one statement (prevents race condition)
+   - If `count === 0` → throw `InsufficientCoinsError` (tx rolls back, no `UserPokemon` created)
+   - `tx.userPokemon.create` — defaults apply: `currentFullness=60`, `currentMood=60`, `lastCalculatedAt=now`, `acquiredAt=now`
+4. `revalidatePath("/", "layout")` — refreshes coin balance across all pages
+5. Return `{ ok: true }` or `{ ok: false; error: string }`
 
 ### Client polling (every `NEXT_PUBLIC_POLLING_INTERVAL_MINUTES` + `refetchOnWindowFocus`)
 
@@ -168,27 +174,32 @@ Calls `GET /api/my-pokemons` — server handles all state sync, client just re-r
 ## Env Vars
 
 ```env
-# Server
+# Required now
 DATABASE_URL=
 AUTH_SECRET=
-INITIAL_COINS=500
-INITIAL_FULLNESS=60
-INITIAL_MOOD=60
+
+# Gameplay phase
 FEED_COOLDOWN_MINUTES=30
 PLAY_COOLDOWN_MINUTES=30
 
-# Client (NEXT_PUBLIC_ prefix required)
+# Gameplay phase (client — NEXT_PUBLIC_ prefix required)
 NEXT_PUBLIC_POLLING_INTERVAL_MINUTES=5
 ```
 
+Starting values are baked into the schema as `@default` — not env vars:
+- `User.coins` → 500
+- `UserPokemon.currentFullness` → 60
+- `UserPokemon.currentMood` → 60
+
+Can be changed to env vars later if per-environment tuning is needed.
+
 ## Implementation Progress
 
-- [x] Phase 1: Database setup — `packages/database` Prisma schema (User model) + client singleton + seed
-- [x] Phase 2: Auth — Auth.js v5, login/register/logout pages, middleware
-- [ ] Phase 3: Game logic — `packages/config` milestones + `packages/core` pure functions + unit tests
-- [ ] Phase 4: API routes — buy, feed, play, list + remaining Prisma models
-- [ ] Phase 5: UI — collection page, Pokémon detail, shop
-- [ ] Phase 6: Client polling
+- [x] Auth & DB foundation — User model, Auth.js v5 login/register/logout, middleware
+- [x] Shop & Collection — browse Pokémon, buy with coins, view collection
+- [ ] Gameplay — feed, play, decay, fullness/mood/heart, detail page, SWR polling
+- [ ] Milestones & badges — streak tracking, coin rewards, `packages/config` + `packages/core`
+- [ ] Account management — avatar, profile settings, account menu
 
 ## Dev Workflow
 
