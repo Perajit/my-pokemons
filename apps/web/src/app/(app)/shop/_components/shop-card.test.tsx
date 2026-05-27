@@ -78,7 +78,14 @@ describe("ShopCard", () => {
   });
 
   it("shows error message when action returns an error", async () => {
-    mockAction.mockResolvedValue({ ok: false, error: "Insufficient coins" });
+    mockAction.mockResolvedValue({
+      ok: false,
+      error: {
+        type: "SHOP",
+        code: "INSUFFICIENT_COINS",
+        message: "Insufficient coins",
+      },
+    });
     render(<ShopCard pokemon={pikachu} userCoins={500} />);
     openDialog();
     fireEvent.click(screen.getByRole("button", { name: /^buy$/i }));

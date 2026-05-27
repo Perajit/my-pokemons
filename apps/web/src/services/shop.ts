@@ -7,7 +7,7 @@ export async function buyPokemon(
 ): Promise<void> {
   const pokemon = await db.pokemon.findUnique({ where: { id: pokemonId } });
   if (!pokemon) {
-    throw new NotFoundError();
+    throw new NotFoundError("Pokémon");
   }
 
   await db.$transaction(async (tx) => {

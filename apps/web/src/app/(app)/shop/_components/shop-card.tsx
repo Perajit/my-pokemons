@@ -46,7 +46,7 @@ export function ShopCard({
     try {
       const result = await buyPokemonAction(pokemon.id);
       if (!result.ok) {
-        setError(result.error);
+        setError(result.error.message);
         return;
       }
       setOpen(false);

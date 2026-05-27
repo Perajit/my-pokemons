@@ -126,6 +126,14 @@ describe("registerAction", () => {
     });
   });
 
+  it("treats missing email and password form fields as empty strings", async () => {
+    // FormData with no email/password keys at all — exercises the ?? "" fallbacks
+    const result = await registerAction(null, new FormData());
+    // Empty email triggers the email-validation error path, which is what we expect
+    expect(typeof result).toBe("string");
+    expect(db.user.findUnique).not.toHaveBeenCalled();
+  });
+
   it("omits name when not provided", async () => {
     vi.mocked(db.user.findUnique).mockResolvedValue(null);
     vi.mocked(db.user.create).mockResolvedValue({} as never);

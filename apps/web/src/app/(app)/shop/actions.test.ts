@@ -18,14 +18,23 @@ beforeEach(() => {
 });
 
 describe("buyPokemonAction", () => {
-  it("returns Unauthorized when session is missing", async () => {
+  it("returns UNAUTHORIZED payload when session is missing", async () => {
     mockAuth.mockResolvedValue(null);
+
     const result = await buyPokemonAction("poke-id");
-    expect(result).toEqual({ ok: false, error: "Unauthorized" });
+
+    expect(result).toEqual({
+      ok: false,
+      error: {
+        type: "AUTH",
+        code: "UNAUTHORIZED",
+        message: "Unauthorized",
+      },
+    });
     expect(mockBuy).not.toHaveBeenCalled();
   });
 
-  it("calls buyPokemon with userId and pokemonId on success", async () => {
+  it("calls buyPokemon and revalidates layout on success", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } });
     mockBuy.mockResolvedValue(undefined);
 
@@ -36,28 +45,52 @@ describe("buyPokemonAction", () => {
     expect(result).toEqual({ ok: true });
   });
 
-  it("returns not-found error for NotFoundError", async () => {
+  it("maps NotFoundError to SHOP/NOT_FOUND payload", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } });
-    mockBuy.mockRejectedValue(new NotFoundError());
+    mockBuy.mockRejectedValue(new NotFoundError("Pokémon"));
 
     const result = await buyPokemonAction("poke-id");
-    expect(result).toEqual({ ok: false, error: "Pokémon not found" });
+
+    expect(result).toEqual({
+      ok: false,
+      error: {
+        type: "SHOP",
+        code: "NOT_FOUND",
+        message: "Pokémon not found",
+      },
+    });
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
-  it("returns insufficient-coins error for InsufficientCoinsError", async () => {
+  it("maps InsufficientCoinsError to SHOP/INSUFFICIENT_COINS payload", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } });
     mockBuy.mockRejectedValue(new InsufficientCoinsError());
 
     const result = await buyPokemonAction("poke-id");
-    expect(result).toEqual({ ok: false, error: "Insufficient coins" });
+
+    expect(result).toEqual({
+      ok: false,
+      error: {
+        type: "SHOP",
+        code: "INSUFFICIENT_COINS",
+        message: "Insufficient coins",
+      },
+    });
   });
 
-  it("returns generic error for unexpected throws", async () => {
+  it("returns SYSTEM/UNKNOWN payload for unexpected throws", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } });
     mockBuy.mockRejectedValue(new Error("DB exploded"));
 
     const result = await buyPokemonAction("poke-id");
-    expect(result).toEqual({ ok: false, error: "Something went wrong" });
+
+    expect(result).toEqual({
+      ok: false,
+      error: {
+        type: "SYSTEM",
+        code: "UNKNOWN",
+        message: "Something went wrong",
+      },
+    });
   });
 });
