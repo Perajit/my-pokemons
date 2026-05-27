@@ -1,10 +1,17 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalEnv": ["DATABASE_URL", "DIRECT_URL"],
   "tasks": {
     "db:generate": {},
     "db:push": { "cache": false },
     "build": {
       "dependsOn": ["^build", "^db:generate", "^db:push"],
+      "env": [
+        "AUTH_SECRET",
+        "FEED_COOLDOWN_SECONDS",
+        "PLAY_COOLDOWN_SECONDS",
+        "NEXT_PUBLIC_POLLING_INTERVAL_SECONDS"
+      ],
       "outputs": [".next/**", "!.next/cache/**"]
     },
     "dev": {

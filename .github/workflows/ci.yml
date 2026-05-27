@@ -25,6 +25,7 @@ jobs:
 
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/my_pokemons_test
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/my_pokemons_test
       DATABASE_URL_TEST: postgresql://postgres:postgres@localhost:5432/my_pokemons_test
       AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
 
