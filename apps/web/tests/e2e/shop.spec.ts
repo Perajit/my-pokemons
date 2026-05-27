@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 const USER = {
   email: `shop-${Date.now()}@example.com`,
-  password: "password123",
+  password: "Password1!",
 };
 
 test.describe.configure({ mode: "serial" });
@@ -15,7 +15,9 @@ test("register lands on empty dashboard with Browse Shop CTA", async ({
   await page.fill("[name=password]", USER.password);
   await page.click("[type=submit]");
   await expect(page).toHaveURL("/");
-  await expect(page.getByText("Your collection is empty")).toBeVisible();
+  await expect(
+    page.getByText("Your collection is waiting to begin."),
+  ).toBeVisible();
   await expect(page.getByRole("link", { name: /browse shop/i })).toBeVisible();
 });
 
@@ -64,5 +66,5 @@ test("dashboard shows purchased Bulbasaur in collection", async ({ page }) => {
   await page.click("[type=submit]");
   await expect(page).toHaveURL("/");
   await expect(page.getByText("Bulbasaur")).toBeVisible();
-  await expect(page.getByText(/^since /i)).toBeVisible();
+  await expect(page.getByText("Active")).toBeVisible();
 });

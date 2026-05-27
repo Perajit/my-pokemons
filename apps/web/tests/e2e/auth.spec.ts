@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 const USER = {
   email: `test-${Date.now()}@example.com`,
-  password: "password123",
+  password: "Password1!",
 };
 
 test.describe.configure({ mode: "serial" });

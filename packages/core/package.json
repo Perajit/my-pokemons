@@ -1,0 +1,18 @@
+{
+  "name": "@my-pokemons/core",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@my-pokemons/config": "workspace:*",
+    "@vitest/coverage-v8": "^4",
+    "typescript": "^5",
+    "vitest": "^4"
+  }
+}

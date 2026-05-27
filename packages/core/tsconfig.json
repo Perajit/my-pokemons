@@ -1,0 +1,4 @@
+{
+  "extends": "@my-pokemons/config/tsconfig",
+  "include": ["src"]
+}
