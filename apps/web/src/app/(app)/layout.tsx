@@ -31,7 +31,7 @@ export default async function AppLayout({
               <Link href="/" className="flex shrink-0 items-center gap-2">
                 <Pokeball className="size-8" />
                 <span className="hidden font-heading text-xl leading-none font-semibold text-stone-700 sm:inline">
-                  My Pokémons
+                  My Pokémon
                 </span>
               </Link>
               <NavLinks className="hidden sm:flex" />

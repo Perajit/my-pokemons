@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { href: "/", label: "My Pokémon" },
+  { href: "/", label: "Collection" },
   { href: "/shop", label: "Shop" },
 ];
 

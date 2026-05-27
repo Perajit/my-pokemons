@@ -12,7 +12,7 @@ export default function AuthLayout({
       <div className="relative z-10 flex items-center gap-3">
         <Pokeball className="size-11" />
         <span className="font-heading text-2xl font-bold tracking-tight text-foreground">
-          My Pokémons
+          My Pokémon
         </span>
       </div>
       <div className="relative z-10 w-full max-w-sm">{children}</div>

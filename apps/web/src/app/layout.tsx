@@ -14,7 +14,7 @@ const fredoka = Fredoka({
 });
 
 export const metadata: Metadata = {
-  title: "My Pokémons",
+  title: "My Pokémon",
   description: "Keep your Pokémon happy and earn badges",
 };
 

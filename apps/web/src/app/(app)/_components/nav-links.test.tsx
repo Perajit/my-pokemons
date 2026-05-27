@@ -37,7 +37,7 @@ describe("NavLinks", () => {
     (usePathname as Mock).mockReturnValue("/");
     render(<NavLinks />);
 
-    expect(screen.getByRole("link", { name: /my pokémon/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /collection/i })).toHaveAttribute(
       "href",
       "/",
     );
@@ -51,7 +51,7 @@ describe("NavLinks", () => {
     (usePathname as Mock).mockReturnValue("/");
     render(<NavLinks />);
 
-    expect(screen.getByRole("link", { name: /my pokémon/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /collection/i })).toHaveAttribute(
       "aria-current",
       "page",
     );
@@ -69,7 +69,7 @@ describe("NavLinks", () => {
       "page",
     );
     expect(
-      screen.getByRole("link", { name: /my pokémon/i }),
+      screen.getByRole("link", { name: /collection/i }),
     ).not.toHaveAttribute("aria-current");
   });
 
@@ -85,5 +85,31 @@ describe("NavLinks", () => {
     render(<NavLinks />);
 
     expect(screen.queryByTestId("nav-indicator")).not.toBeInTheDocument();
+  });
+
+  it("cancels the pending requestAnimationFrame on unmount", () => {
+    (usePathname as Mock).mockReturnValue("/");
+    const cancelSpy = vi.spyOn(window, "cancelAnimationFrame");
+    const { unmount } = render(<NavLinks />);
+    unmount();
+    expect(cancelSpy).toHaveBeenCalled();
+    cancelSpy.mockRestore();
+  });
+
+  it("adds the transition class to the indicator after the rAF fires", () => {
+    (usePathname as Mock).mockReturnValue("/");
+    const rafSpy = vi
+      .spyOn(window, "requestAnimationFrame")
+      .mockImplementation((cb: FrameRequestCallback) => {
+        cb(0);
+        return 0;
+      });
+
+    render(<NavLinks />);
+
+    expect(screen.getByTestId("nav-indicator").className).toContain(
+      "transition-all",
+    );
+    rafSpy.mockRestore();
   });
 });
