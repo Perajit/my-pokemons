@@ -33,8 +33,8 @@ Tooling: pnpm workspaces + Turborepo.
 - When both Fullness and Mood reach 0 → Pokémon faints: `isActive=false`, `faintedAt=now`
 - Fainted Pokémon are view-only — Feed and Play are blocked
 - If `!isActive` on API read → skip decay calculation entirely, return as-is
-- **Feed** → +`feedFullnessGain` Fullness, +`feedCoinReward` coins; cooldown: `FEED_COOLDOWN_MINUTES`
-- **Play** → +`playMoodGain` Mood, +`playCoinReward` coins; cooldown: `PLAY_COOLDOWN_MINUTES`
+- **Feed** → +`feedFullnessGain` Fullness, +`feedCoinReward` coins; cooldown: `FEED_COOLDOWN_SECONDS`
+- **Play** → +`playMoodGain` Mood, +`playCoinReward` coins; cooldown: `PLAY_COOLDOWN_SECONDS`
 - All stat values clamped to [0, 100] after any mutation
 - **activeStreak** = `floor((now − acquiredAt) / 24h)` if active; `floor((faintedAt − acquiredAt) / 24h)` if fainted — derived, not stored
 
@@ -108,8 +108,9 @@ All functions are pure (no DB, no side effects). Called from API route handlers 
 - `calculateHeart(fullness, mood)` — Returns `(HEART_WEIGHTS.fullness × f) + (HEART_WEIGHTS.mood × m)`.
   Called on every GET response — computed, never stored.
 
-- `checkCooldown(lastActionAt, cooldownMinutes, now)` — Returns `{ allowed, remainingSeconds }`. Caller passes the right `lastActionAt` and cooldown value.
-  Feed route uses `lastFedAt`; Play uses `lastPlayedAt`.
+- `isOnCooldown(lastActionAt, cooldownSeconds, now)` — Returns `true` while `lastActionAt + cooldownSeconds` is still in the future. Null `lastActionAt` → never on cooldown.
+
+- `cooldownEndsAt(lastActionAt, cooldownSeconds)` — Returns the absolute `Date` when the cooldown ends, or `null` if `lastActionAt` is null. Returned to the client so it can compute remaining time from `Date.now()` each tick (avoids drift).
 
 - `applyFeed(currentFullness, feedFullnessGain)` — Adds gain to fullness, clamped [0,100].
   Called in the Feed route, after cooldown passes.
@@ -145,7 +146,7 @@ Business logic in `src/services/pokemon.ts`. Same pattern as `buyPokemonAction`.
 
 **feedAction(userPokemonId)**
 1. Run shared sync steps → throw `FaintedError` if fainted
-2. `checkCooldown(lastFedAt, FEED_COOLDOWN_MINUTES, now)` → throw `CooldownError` if blocked
+2. `checkCooldown(lastFedAt, FEED_COOLDOWN_SECONDS, now)` → throw `CooldownError` if blocked
 3. `newFullness = applyFeed(currentFullness, feedFullnessGain)`
 4. Add `feedCoinReward` to `user.coins`
 5. `newMilestones = checkMilestones(...)` — wired up in milestones phase; skip for now
@@ -153,7 +154,7 @@ Business logic in `src/services/pokemon.ts`. Same pattern as `buyPokemonAction`.
 7. `revalidatePath("/", "layout")` — refreshes coin balance
 8. Return `{ ok: true }` or `{ ok: false; error: string }`
 
-**playAction(userPokemonId)** — same pattern; substitute `lastPlayedAt`, `PLAY_COOLDOWN_MINUTES`, `applyPlay`, `playMoodGain`, `playCoinReward`
+**playAction(userPokemonId)** — same pattern; substitute `lastPlayedAt`, `PLAY_COOLDOWN_SECONDS`, `applyPlay`, `playMoodGain`, `playCoinReward`
 
 Note: cooldown is returned as `cooldownEndsAt: Date | null` (not `remainingSeconds`) so the client computes remaining time from `Date.now()` on each tick — prevents drift across background tabs and slow networks.
 
@@ -170,24 +171,32 @@ Server action in `src/app/(app)/shop/actions.ts`; business logic in `src/service
 4. `revalidatePath("/", "layout")` — refreshes coin balance across all pages
 5. Return `{ ok: true }` or `{ ok: false; error: string }`
 
-### Client polling (every `NEXT_PUBLIC_POLLING_INTERVAL_MINUTES` + `refetchOnWindowFocus`)
+### Client polling (every `NEXT_PUBLIC_POLLING_INTERVAL_SECONDS` + `refetchOnWindowFocus`)
 
 Calls `GET /api/my-pokemons` — server handles all state sync, client just re-renders
 
 ## Env Vars
 
+Two-file convention, following Next.js:
+- `apps/web/.env` — **committed**, non-sensitive defaults so the app works out of the box
+- `apps/web/.env.local` — **gitignored**, per-developer overrides (secrets, dev-only knobs). Loaded after `.env` so it overrides. Not loaded in `NODE_ENV=test`.
+- Root `.gitignore` ignores `.env` globally (to protect `packages/database/.env` which contains the DB credentials). `apps/web/.gitignore` re-includes `.env` with `!.env`.
+
+Time-based env vars use **seconds** (not minutes) so any timer can be cranked down to single-digit values for manual verification.
+
 ```env
-# Required now
-DATABASE_URL=
-AUTH_SECRET=
+# apps/web/.env (committed defaults)
+NEXT_PUBLIC_POLLING_INTERVAL_SECONDS=300   # 5 min
+FEED_COOLDOWN_SECONDS=1800                  # 30 min
+PLAY_COOLDOWN_SECONDS=1200                  # 20 min
 
-# Gameplay phase
-FEED_COOLDOWN_MINUTES=30
-PLAY_COOLDOWN_MINUTES=20
-
-# Gameplay phase (client — NEXT_PUBLIC_ prefix required)
-NEXT_PUBLIC_POLLING_INTERVAL_MINUTES=5
+# apps/web/.env.local (per-developer, secret/override)
+DATABASE_URL=postgresql://...
+AUTH_SECRET=...
+# NEXT_PUBLIC_POLLING_INTERVAL_SECONDS=10  # fast polling while developing
 ```
+
+All env reads use `parseInt(process.env.X ?? "<default>", 10)` so the app works without `.env.local` existing.
 
 Starting values are baked into the schema as `@default` — not env vars:
 - `User.coins` → 500
@@ -200,7 +209,10 @@ Can be changed to env vars later if per-environment tuning is needed.
 
 - [x] Auth & DB foundation — User model, Auth.js v5 login/register/logout, middleware
 - [x] Shop & Collection — browse Pokémon, buy with coins, view collection
-- [ ] Gameplay — feed, play, decay, fullness/mood/heart, detail page, SWR polling
+- [x] Gameplay
+  - [x] Decay system — fullness/mood/heart, lazy sync-on-read, collection card + detail page, SWR polling
+  - [x] Feed & Play — server actions, atomic cooldown guard, live countdown, coin rewards
+- [ ] Nickname — `UserPokemon.nickname`, defaults to species name at acquire; rename UI on detail page
 - [ ] Milestones & badges — streak tracking, coin rewards, `packages/config` + `packages/core`
 - [ ] Account management — avatar, profile settings, account menu
 
@@ -212,6 +224,12 @@ Unit and component tests are colocated with their source as `*.test.ts` /
 tests live in `apps/web/tests/integration/`. E2E specs live in
 `apps/web/tests/e2e/`.
 
+### TDD workflow
+
+Write the test first, then the implementation. Skip the "run to see red"
+step — go straight to writing the implementation, then run the test once.
+The expected-to-fail run wastes a cycle.
+
 ### Definition of done
 
 All of the following must pass before an implementation is considered complete.
@@ -219,9 +237,12 @@ All of the following must pass before an implementation is considered complete.
 ```bash
 pnpm --filter @my-pokemons/web test           # unit + component tests (Vitest)
 pnpm lint                                      # lint all packages
-pnpm format:check                              # formatting
 pnpm build                                     # full build
 ```
+
+(Formatting is handled by the pre-commit `lint-staged` hook: `prettier --write`
+and `eslint --fix` run on staged files. CI's `pnpm format:check` is the
+safety net. No need to run `pnpm format` / `pnpm format:check` manually.)
 
 When test files change, also verify coverage (90% threshold is enforced):
 

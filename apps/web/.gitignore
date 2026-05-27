@@ -32,8 +32,11 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files: commit non-sensitive defaults in .env (and .env.development / .env.production);
+# per-developer overrides go in .env.local (and friends), which stay gitignored.
+# Re-include .env here — root .gitignore globally ignores .env to protect packages/database/.env (DB creds).
+!.env
+.env*.local
 
 # vercel
 .vercel
