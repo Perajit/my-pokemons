@@ -1,13 +1,15 @@
 import { AppError, type AppErrorPayload } from "@/services/errors";
 
-export type ActionResult = { ok: true } | { ok: false; error: AppErrorPayload };
+export type ActionResult<T = void> =
+  | { ok: true; data: T }
+  | { ok: false; error: AppErrorPayload };
 
-export async function runAction(
-  fn: () => Promise<void>,
-): Promise<ActionResult> {
+export async function runAction<T>(
+  fn: () => Promise<T>,
+): Promise<ActionResult<T>> {
   try {
-    await fn();
-    return { ok: true };
+    const data = await fn();
+    return { ok: true, data };
   } catch (err) {
     if (err instanceof AppError) {
       return { ok: false, error: err.toNetworkObject() };

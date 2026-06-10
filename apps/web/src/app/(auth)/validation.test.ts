@@ -6,7 +6,7 @@ import {
   validateRequired,
 } from "./validation";
 
-describe("validateEmail", () => {
+describe("validateEmail()", () => {
   it("rejects empty email", () => {
     expect(validateEmail("")).toBe("Email is required");
   });
@@ -35,7 +35,7 @@ describe("validateEmail", () => {
   });
 });
 
-describe("validatePassword", () => {
+describe("validatePassword()", () => {
   it("rejects empty password", () => {
     expect(validatePassword("")).toBe("Password is required");
   });
@@ -60,7 +60,7 @@ describe("validatePassword", () => {
   );
 });
 
-describe("checkPasswordRules", () => {
+describe("checkPasswordRules()", () => {
   it("returns all rules with met=false for empty password", () => {
     const rules = checkPasswordRules("");
     expect(rules).toHaveLength(5);
@@ -88,7 +88,7 @@ describe("checkPasswordRules", () => {
   });
 });
 
-describe("validateRequired", () => {
+describe("validateRequired()", () => {
   it("returns error with label when value is empty", () => {
     expect(validateRequired("", "Email")).toBe("Email is required");
     expect(validateRequired("", "Password")).toBe("Password is required");

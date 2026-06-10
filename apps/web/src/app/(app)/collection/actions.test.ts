@@ -21,7 +21,7 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-describe("feedAction", () => {
+describe("feedAction()", () => {
   it("returns UNAUTHORIZED payload when session is missing", async () => {
     mockAuth.mockResolvedValue(null);
 
@@ -38,15 +38,15 @@ describe("feedAction", () => {
     expect(mockFeed).not.toHaveBeenCalled();
   });
 
-  it("calls feedPokemon and revalidates layout on success", async () => {
+  it("calls feedPokemon, revalidates layout, and returns events on success", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } });
-    mockFeed.mockResolvedValue(undefined);
+    mockFeed.mockResolvedValue({ userPokemon: {}, events: [] });
 
     const result = await feedAction("up-1");
 
     expect(mockFeed).toHaveBeenCalledWith("user-1", "up-1");
     expect(revalidatePath).toHaveBeenCalledWith("/", "layout");
-    expect(result).toEqual({ ok: true });
+    expect(result).toEqual({ ok: true, data: { events: [] } });
   });
 
   it("maps NotOwnedError to GAMEPLAY/NOT_OWNED payload", async () => {
@@ -117,7 +117,7 @@ describe("feedAction", () => {
   });
 });
 
-describe("playAction", () => {
+describe("playAction()", () => {
   it("returns UNAUTHORIZED payload when session is missing", async () => {
     mockAuth.mockResolvedValue(null);
 
@@ -134,15 +134,15 @@ describe("playAction", () => {
     expect(mockPlay).not.toHaveBeenCalled();
   });
 
-  it("calls playWithPokemon and revalidates layout on success", async () => {
+  it("calls playWithPokemon, revalidates layout, and returns events on success", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } });
-    mockPlay.mockResolvedValue(undefined);
+    mockPlay.mockResolvedValue({ userPokemon: {}, events: [] });
 
     const result = await playAction("up-1");
 
     expect(mockPlay).toHaveBeenCalledWith("user-1", "up-1");
     expect(revalidatePath).toHaveBeenCalledWith("/", "layout");
-    expect(result).toEqual({ ok: true });
+    expect(result).toEqual({ ok: true, data: { events: [] } });
   });
 
   it("maps CooldownError to GAMEPLAY/COOLDOWN payload", async () => {

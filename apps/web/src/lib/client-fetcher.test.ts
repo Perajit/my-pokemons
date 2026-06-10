@@ -5,7 +5,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("apiFetcher", () => {
+describe("apiFetcher()", () => {
   it("returns the parsed JSON body on a successful response", async () => {
     vi.stubGlobal(
       "fetch",

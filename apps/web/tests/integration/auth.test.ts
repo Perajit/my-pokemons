@@ -29,7 +29,7 @@ afterAll(() => db.$disconnect());
 
 // ─── registerAction ───────────────────────────────────────────────────────────
 
-describe("registerAction", () => {
+describe("registerAction()", () => {
   const makeForm = (email: string, password: string, name?: string) => {
     const f = new FormData();
     f.set("email", email);
@@ -96,7 +96,7 @@ describe("registerAction", () => {
 
 // ─── authorizeUser ────────────────────────────────────────────────────────────
 
-describe("authorizeUser", () => {
+describe("authorizeUser()", () => {
   beforeEach(async () => {
     await db.user.create({
       data: {

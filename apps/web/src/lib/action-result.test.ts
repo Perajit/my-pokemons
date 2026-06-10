@@ -7,7 +7,7 @@ import {
   UnauthorizedError,
 } from "@/services/errors";
 
-describe("runAction", () => {
+describe("runAction()", () => {
   it("returns { ok: true } when fn resolves", async () => {
     const result = await runAction(async () => {});
     expect(result).toEqual({ ok: true });

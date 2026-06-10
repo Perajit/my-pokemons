@@ -7,7 +7,7 @@ import {
   UnauthorizedError,
 } from "@/services/errors";
 
-describe("appErrorToResponse", () => {
+describe("appErrorToResponse()", () => {
   it("returns 401 + AUTH payload for UnauthorizedError", async () => {
     const res = appErrorToResponse(new UnauthorizedError());
     expect(res.status).toBe(401);

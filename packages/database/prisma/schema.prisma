@@ -1,5 +1,6 @@
 generator client {
   provider      = "prisma-client-js"
+  output        = "../src/generated/client"
   binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
@@ -35,20 +36,31 @@ model Pokemon {
 }
 
 model UserPokemon {
-  id               String    @id @default(cuid())
+  id               String             @id @default(cuid())
   userId           String
   pokemonId        String
-  currentFullness  Float     @default(60)
-  currentMood      Float     @default(60)
-  isActive         Boolean   @default(true)
+  currentFullness  Float              @default(60)
+  currentMood      Float              @default(60)
   faintedAt        DateTime?
   lastFedAt        DateTime?
   lastPlayedAt     DateTime?
-  lastCalculatedAt DateTime  @default(now())
-  acquiredAt       DateTime  @default(now())
-  user             User      @relation(fields: [userId], references: [id])
-  pokemon          Pokemon   @relation(fields: [pokemonId], references: [id])
+  lastCalculatedAt DateTime           @default(now())
+  acquiredAt       DateTime           @default(now())
+  user             User               @relation(fields: [userId], references: [id])
+  pokemon          Pokemon            @relation(fields: [pokemonId], references: [id])
+  achievements       UserPokemonAchievement[]
 
   @@index([userId])
-  @@index([userId, isActive])
+}
+
+model UserPokemonAchievement {
+  id              String      @id @default(cuid())
+  userPokemonId   String
+  achievementType String
+  achievementKey  String
+  completedAt     DateTime    @default(now())
+  userPokemon     UserPokemon @relation(fields: [userPokemonId], references: [id], onDelete: Cascade)
+
+  @@unique([userPokemonId, achievementType, achievementKey])
+  @@index([userPokemonId])
 }

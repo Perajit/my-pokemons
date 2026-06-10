@@ -30,6 +30,6 @@ export async function registerAction(
 
   await db.user.create({ data: { name, email, passwordHash } });
 
-  await signIn("credentials", { email, password, redirectTo: "/" });
+  await signIn("credentials", { email, password, redirectTo: "/collection" });
   return null;
 }

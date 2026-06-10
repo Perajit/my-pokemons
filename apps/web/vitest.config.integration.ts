@@ -5,6 +5,7 @@ import { resolve } from "path";
 export default defineConfig({
   plugins: [react()],
   test: {
+    name: "integration",
     globals: true,
     environment: "node",
     fileParallelism: false,

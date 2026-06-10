@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { levelColor, fullnessLabel, moodLabel } from "./pokemon-levels";
 
-describe("levelColor", () => {
+describe("levelColor()", () => {
   it.each([
     [0, "text-rose-700"],
     [20, "text-rose-700"],
@@ -16,7 +16,7 @@ describe("levelColor", () => {
   });
 });
 
-describe("fullnessLabel", () => {
+describe("fullnessLabel()", () => {
   it.each([
     [0, "Starving"],
     [20, "Starving"],
@@ -33,7 +33,7 @@ describe("fullnessLabel", () => {
   });
 });
 
-describe("moodLabel", () => {
+describe("moodLabel()", () => {
   it.each([
     [0, "Sad"],
     [20, "Sad"],

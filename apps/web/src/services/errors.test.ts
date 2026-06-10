@@ -28,7 +28,7 @@ describe("AppError", () => {
     expect(new AppError("SYSTEM", "X", "x")).toBeInstanceOf(Error);
   });
 
-  describe("toNetworkObject", () => {
+  describe("toNetworkObject()", () => {
     it("returns type, code, message", () => {
       const err = new AppError("GAMEPLAY", "FOO", "Foo happened");
       expect(err.toNetworkObject()).toEqual({

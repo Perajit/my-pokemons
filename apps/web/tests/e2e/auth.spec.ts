@@ -12,21 +12,25 @@ test("unauthenticated user is redirected to /login", async ({ page }) => {
   await expect(page).toHaveURL(/login/);
 });
 
-test("register creates account and redirects to /", async ({ page }) => {
+test("register creates account and redirects to /collection", async ({
+  page,
+}) => {
   await page.goto("/register");
   await page.fill("[name=email]", USER.email);
   await page.fill("[name=password]", USER.password);
   await page.click("[type=submit]");
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/collection");
   await expect(page.getByRole("button", { name: /logout/i })).toBeVisible();
 });
 
-test("login with valid credentials redirects to /", async ({ page }) => {
+test("login with valid credentials redirects to /collection", async ({
+  page,
+}) => {
   await page.goto("/login");
   await page.fill("[name=email]", USER.email);
   await page.fill("[name=password]", USER.password);
   await page.click("[type=submit]");
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/collection");
 });
 
 test("login with wrong password shows inline error", async ({ page }) => {
@@ -51,9 +55,9 @@ test("session persists on page refresh", async ({ page }) => {
   await page.fill("[name=email]", USER.email);
   await page.fill("[name=password]", USER.password);
   await page.click("[type=submit]");
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/collection");
   await page.reload();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/collection");
 });
 
 test("logout redirects to /login", async ({ page }) => {
@@ -61,7 +65,7 @@ test("logout redirects to /login", async ({ page }) => {
   await page.fill("[name=email]", USER.email);
   await page.fill("[name=password]", USER.password);
   await page.click("[type=submit]");
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/collection");
   await page.click("[type=submit]"); // logout button
   await expect(page).toHaveURL(/login/);
 });

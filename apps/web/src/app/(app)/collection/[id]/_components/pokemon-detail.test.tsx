@@ -3,6 +3,22 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import * as React from "react";
+
+vi.mock("next/link", () => ({
+  default: ({
+    href,
+    children,
+    ...rest
+  }: {
+    href: string;
+    children: React.ReactNode;
+  } & React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+    <a href={href} {...rest}>
+      {children}
+    </a>
+  ),
+}));
 
 vi.mock("swr", () => ({
   default: (
@@ -23,13 +39,13 @@ vi.mock("../../actions", () => ({
 
 import { toast } from "sonner";
 import { feedAction, playAction } from "../../actions";
-import type { ClientPokemon } from "@/services/pokemon";
+import type { UserPokemonDTO } from "@/services/pokemon";
 import { PokemonDetail } from "./pokemon-detail";
 
 const mockFeed = feedAction as ReturnType<typeof vi.fn>;
 const mockPlay = playAction as ReturnType<typeof vi.fn>;
 
-function makePokemon(overrides: Partial<ClientPokemon> = {}): ClientPokemon {
+function makePokemon(overrides: Partial<UserPokemonDTO> = {}): UserPokemonDTO {
   return {
     id: "up-1",
     pokemon: { name: "Pikachu", pokeApiId: 25 },
@@ -37,13 +53,14 @@ function makePokemon(overrides: Partial<ClientPokemon> = {}): ClientPokemon {
     currentMood: 70,
     heart: 76,
     activeDays: 5,
-    isActive: true,
+    isFainted: false,
     acquiredAt: "2024-05-26T12:00:00Z",
     faintedAt: null,
     feedCooldownEndsAt: null,
     playCooldownEndsAt: null,
     feedCoinReward: 3,
     playCoinReward: 5,
+    earnedBondLevels: [],
     ...overrides,
   };
 }
@@ -56,22 +73,29 @@ describe("PokemonDetail", () => {
   it("renders name, days since acquired, and stat bars when active", () => {
     render(<PokemonDetail initial={makePokemon()} />);
     expect(screen.getByText("Pikachu")).toBeInTheDocument();
-    expect(screen.getByText(/5 days/)).toBeInTheDocument();
+    expect(screen.getByText(/5 days streak/i)).toBeInTheDocument();
     expect(screen.getByLabelText("Heart: 76 of 100")).toBeInTheDocument();
     expect(screen.getByLabelText("Fullness: 80 of 100")).toBeInTheDocument();
     expect(screen.getByLabelText("Mood: 70 of 100")).toBeInTheDocument();
   });
 
-  it("uses singular 'day' when activeDays is 1", () => {
+  it("renders a Back to Collection link pointing at /collection", () => {
+    render(<PokemonDetail initial={makePokemon()} />);
+    expect(
+      screen.getByRole("link", { name: /back to collection/i }),
+    ).toHaveAttribute("href", "/collection");
+  });
+
+  it("renders the streak header with the active day count", () => {
     render(<PokemonDetail initial={makePokemon({ activeDays: 1 })} />);
-    expect(screen.getByText(/1 day$/)).toBeInTheDocument();
+    expect(screen.getByText(/1 day streak/i)).toBeInTheDocument();
   });
 
   it("shows fainted label and hides stat bars when not active", () => {
     render(
       <PokemonDetail
         initial={makePokemon({
-          isActive: false,
+          isFainted: true,
           faintedAt: "2024-06-01T00:00:00Z",
           currentFullness: 0,
           currentMood: 0,
@@ -87,7 +111,7 @@ describe("PokemonDetail", () => {
 
   it("desaturates the sprite when fainted", () => {
     const { container } = render(
-      <PokemonDetail initial={makePokemon({ isActive: false })} />,
+      <PokemonDetail initial={makePokemon({ isFainted: true })} />,
     );
     const img = container.querySelector("img");
     expect(img?.className).toContain("grayscale");
@@ -100,7 +124,7 @@ describe("PokemonDetail", () => {
   });
 
   it("hides Feed and Play buttons when fainted", () => {
-    render(<PokemonDetail initial={makePokemon({ isActive: false })} />);
+    render(<PokemonDetail initial={makePokemon({ isFainted: true })} />);
     expect(
       screen.queryByRole("button", { name: "Feed" }),
     ).not.toBeInTheDocument();
@@ -132,11 +156,29 @@ describe("PokemonDetail", () => {
       expect(feedBtn).toBeDisabled();
       expect(feedBtn.textContent).toContain("1:30");
     });
+
+    it("ticks the countdown forward as time advances", () => {
+      const cooldownEndsAt = new Date("2024-06-01T12:01:30Z").toISOString();
+      const { unmount } = render(
+        <PokemonDetail
+          initial={makePokemon({ feedCooldownEndsAt: cooldownEndsAt })}
+        />,
+      );
+
+      act(() => {
+        vi.advanceTimersByTime(30_000);
+      });
+
+      const feedBtn = screen.getByRole("button", { name: "Feed" });
+      expect(feedBtn.textContent).toContain("1:00");
+
+      unmount();
+    });
   });
 
   it("calls feedAction and toasts success on Feed click", async () => {
     const user = userEvent.setup();
-    mockFeed.mockResolvedValue({ ok: true });
+    mockFeed.mockResolvedValue({ ok: true, data: { events: [] } });
     render(<PokemonDetail initial={makePokemon()} />);
 
     await act(async () => {
@@ -149,7 +191,7 @@ describe("PokemonDetail", () => {
 
   it("calls playAction and toasts success on Play click", async () => {
     const user = userEvent.setup();
-    mockPlay.mockResolvedValue({ ok: true });
+    mockPlay.mockResolvedValue({ ok: true, data: { events: [] } });
     render(<PokemonDetail initial={makePokemon()} />);
 
     await act(async () => {
@@ -158,6 +200,56 @@ describe("PokemonDetail", () => {
 
     expect(mockPlay).toHaveBeenCalledWith("up-1");
     expect(toast.success).toHaveBeenCalledWith("Played with Pikachu! +5 coins");
+  });
+
+  it("fires an achievement toast in addition to the action toast on Play", async () => {
+    const user = userEvent.setup();
+    mockPlay.mockResolvedValue({
+      ok: true,
+      data: {
+        events: [
+          {
+            type: "achievement_unlocked",
+            achievementKey: "BOND_LEVEL_7D",
+            coinsEarned: 15,
+          },
+        ],
+      },
+    });
+    render(<PokemonDetail initial={makePokemon()} />);
+
+    await act(async () => {
+      await user.click(screen.getByRole("button", { name: "Play" }));
+    });
+
+    expect(toast.success).toHaveBeenCalledWith("Played with Pikachu! +5 coins");
+    expect(toast.success).toHaveBeenCalledWith(
+      "Earned: Close Friend (+15 coins)",
+    );
+  });
+
+  it("fires an achievement toast in addition to the action toast on Feed", async () => {
+    const user = userEvent.setup();
+    mockFeed.mockResolvedValue({
+      ok: true,
+      data: {
+        events: [
+          {
+            type: "achievement_unlocked",
+            achievementKey: "BOND_LEVEL_1D",
+            coinsEarned: 5,
+          },
+        ],
+      },
+    });
+    render(<PokemonDetail initial={makePokemon()} />);
+
+    await act(async () => {
+      await user.click(screen.getByRole("button", { name: "Feed" }));
+    });
+
+    expect(toast.success).toHaveBeenCalledWith("Fed Pikachu! +3 coins");
+    expect(toast.success).toHaveBeenCalledWith("Earned: New Friend (+5 coins)");
   });
 
   it("toasts the error message on a failed Feed click", async () => {

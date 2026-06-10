@@ -75,7 +75,7 @@ describe("buyPokemon service", () => {
     expect(owned[0].pokemonId).toBe(pokemon.id);
     expect(owned[0].currentFullness).toBe(60);
     expect(owned[0].currentMood).toBe(60);
-    expect(owned[0].isActive).toBe(true);
+    expect(owned[0].faintedAt).toBeNull();
   });
 
   it("allows buying the same Pokémon twice", async () => {

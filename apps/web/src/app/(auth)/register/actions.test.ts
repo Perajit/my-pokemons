@@ -32,7 +32,7 @@ function makeFormData(data: Record<string, string>) {
   return fd;
 }
 
-describe("registerAction", () => {
+describe("registerAction()", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -122,7 +122,7 @@ describe("registerAction", () => {
     expect(signIn).toHaveBeenCalledWith("credentials", {
       email: "alice@example.com",
       password: "Password1!",
-      redirectTo: "/",
+      redirectTo: "/collection",
     });
   });
 

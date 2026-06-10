@@ -12,7 +12,7 @@ test("register and buy Bulbasaur to set up gameplay", async ({ page }) => {
   await page.fill("[name=email]", USER.email);
   await page.fill("[name=password]", USER.password);
   await page.click("[type=submit]");
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/collection");
 
   await page.goto("/shop");
   await page.getByText("Bulbasaur").click();
@@ -32,12 +32,15 @@ test("detail page renders Feed and Play buttons for an active pokemon", async ({
   await page.fill("[name=email]", USER.email);
   await page.fill("[name=password]", USER.password);
   await page.click("[type=submit]");
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/collection");
 
   await page.getByRole("link", { name: /open bulbasaur/i }).click();
   await expect(page).toHaveURL(/\/collection\//);
   await expect(page.getByRole("button", { name: "Feed" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Play" })).toBeVisible();
+
+  await page.getByRole("link", { name: /back to collection/i }).click();
+  await expect(page).toHaveURL("/collection");
 });
 
 test("feeding credits coins and starts a cooldown countdown", async ({

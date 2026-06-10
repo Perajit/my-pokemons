@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import useSWR from "swr";
-import type { ClientPokemon } from "@/services/pokemon";
+import type { UserPokemonDTO } from "@/services/pokemon";
 import { Pokeball } from "@/components/pokeball";
 import { buttonVariants } from "@/components/ui/button";
 import { apiFetcher } from "@/lib/client-fetcher";
@@ -22,8 +22,8 @@ function subtitleFor(count: number): string {
   return `${count} companions in your care.`;
 }
 
-export function CollectionGrid({ initial }: { initial: ClientPokemon[] }) {
-  const { data: pokemons = initial } = useSWR<ClientPokemon[]>(
+export function CollectionGrid({ initial }: { initial: UserPokemonDTO[] }) {
+  const { data: pokemons = initial } = useSWR<UserPokemonDTO[]>(
     "/api/collection",
     apiFetcher,
     {

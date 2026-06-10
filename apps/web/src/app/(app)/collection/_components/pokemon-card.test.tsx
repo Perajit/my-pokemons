@@ -2,10 +2,10 @@
 
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import type { ClientPokemon } from "@/services/pokemon";
+import type { UserPokemonDTO } from "@/services/pokemon";
 import { PokemonCard } from "./pokemon-card";
 
-function makePokemon(overrides: Partial<ClientPokemon> = {}): ClientPokemon {
+function makePokemon(overrides: Partial<UserPokemonDTO> = {}): UserPokemonDTO {
   return {
     id: "up-1",
     pokemon: { name: "Pikachu", pokeApiId: 25 },
@@ -13,9 +13,14 @@ function makePokemon(overrides: Partial<ClientPokemon> = {}): ClientPokemon {
     currentMood: 60,
     heart: 60,
     activeDays: 1,
-    isActive: true,
+    isFainted: false,
     acquiredAt: "2024-05-31T12:00:00Z",
     faintedAt: null,
+    feedCooldownEndsAt: null,
+    playCooldownEndsAt: null,
+    feedCoinReward: 3,
+    playCoinReward: 5,
+    earnedAchievements: [],
     ...overrides,
   };
 }
@@ -52,7 +57,7 @@ describe("PokemonCard", () => {
     render(
       <PokemonCard
         pokemon={makePokemon({
-          isActive: false,
+          isFainted: true,
           faintedAt: "2024-06-01T00:00:00Z",
           heart: 0,
           currentFullness: 0,
@@ -68,7 +73,7 @@ describe("PokemonCard", () => {
 
   it("desaturates the sprite when fainted", () => {
     const { container } = render(
-      <PokemonCard pokemon={makePokemon({ isActive: false })} />,
+      <PokemonCard pokemon={makePokemon({ isFainted: true })} />,
     );
     const img = container.querySelector("img");
     expect(img?.className).toContain("grayscale");

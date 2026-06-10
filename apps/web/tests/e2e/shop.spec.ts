@@ -14,7 +14,7 @@ test("register lands on empty dashboard with Browse Shop CTA", async ({
   await page.fill("[name=email]", USER.email);
   await page.fill("[name=password]", USER.password);
   await page.click("[type=submit]");
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/collection");
   await expect(
     page.getByText("Your collection is waiting to begin."),
   ).toBeVisible();
@@ -28,7 +28,7 @@ test("shop page lists Pokémon and navbar shows starting balance", async ({
   await page.fill("[name=email]", USER.email);
   await page.fill("[name=password]", USER.password);
   await page.click("[type=submit]");
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/collection");
   await page.getByRole("link", { name: /browse shop/i }).click();
   await expect(page).toHaveURL("/shop");
   await expect(page.getByText("Bulbasaur")).toBeVisible();
@@ -44,7 +44,7 @@ test("buy Bulbasaur deducts coins and shows success toast", async ({
   await page.fill("[name=email]", USER.email);
   await page.fill("[name=password]", USER.password);
   await page.click("[type=submit]");
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/collection");
   await page.goto("/shop");
 
   await page.getByText("Bulbasaur").click();
@@ -64,7 +64,7 @@ test("dashboard shows purchased Bulbasaur in collection", async ({ page }) => {
   await page.fill("[name=email]", USER.email);
   await page.fill("[name=password]", USER.password);
   await page.click("[type=submit]");
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/collection");
   await expect(page.getByText("Bulbasaur")).toBeVisible();
   await expect(page.getByText("Active")).toBeVisible();
 });

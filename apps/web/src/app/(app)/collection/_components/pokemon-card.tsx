@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Heart, Drumstick, Smile } from "lucide-react";
-import type { ClientPokemon } from "@/services/pokemon";
+import type { UserPokemonDTO } from "@/services/pokemon";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { levelColor } from "./pokemon-levels";
@@ -10,7 +10,7 @@ function spriteUrl(pokeApiId: number) {
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokeApiId}.png`;
 }
 
-export function PokemonCard({ pokemon }: { pokemon: ClientPokemon }) {
+export function PokemonCard({ pokemon }: { pokemon: UserPokemonDTO }) {
   const fullness = Math.round(pokemon.currentFullness);
   const mood = Math.round(pokemon.currentMood);
   const heart = Math.round(pokemon.heart);
@@ -31,7 +31,7 @@ export function PokemonCard({ pokemon }: { pokemon: ClientPokemon }) {
               height={192}
               className={cn(
                 "size-16 shrink-0 drop-shadow-sm transition-transform duration-200 motion-safe:group-hover:scale-110 sm:size-20",
-                !pokemon.isActive && "opacity-50 grayscale",
+                pokemon.isFainted && "opacity-50 grayscale",
               )}
             />
             <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5 sm:flex-none sm:items-center sm:gap-2">
@@ -39,13 +39,13 @@ export function PokemonCard({ pokemon }: { pokemon: ClientPokemon }) {
                 <p className="font-heading text-base font-medium text-stone-700">
                   {pokemon.pokemon.name}
                 </p>
-                {pokemon.isActive ? (
-                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-sm font-medium text-emerald-700">
-                    Active
-                  </span>
-                ) : (
+                {pokemon.isFainted ? (
                   <span className="rounded-full bg-stone-100 px-2.5 py-1 text-sm font-medium text-stone-500">
                     Fainted
+                  </span>
+                ) : (
+                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-sm font-medium text-emerald-700">
+                    Active
                   </span>
                 )}
               </div>

@@ -4,6 +4,19 @@
   "private": true,
   "exports": {
     "./eslint": "./eslint.mjs",
-    "./tsconfig": "./tsconfig.base.json"
+    "./tsconfig": "./tsconfig.base.json",
+    "./bond-levels": "./src/bond-levels.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@prisma/client": "^6"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^4",
+    "typescript": "^5",
+    "vitest": "^4"
   }
 }

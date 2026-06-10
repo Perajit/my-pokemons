@@ -17,7 +17,7 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-describe("buyPokemonAction", () => {
+describe("buyPokemonAction()", () => {
   it("returns UNAUTHORIZED payload when session is missing", async () => {
     mockAuth.mockResolvedValue(null);
 

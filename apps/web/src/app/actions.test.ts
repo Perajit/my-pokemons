@@ -12,7 +12,7 @@ import { signOut } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { logoutAction } from "./actions";
 
-describe("logoutAction", () => {
+describe("logoutAction()", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });

@@ -25,7 +25,7 @@ function makeFormData(data: Record<string, string>) {
   return fd;
 }
 
-describe("loginAction", () => {
+describe("loginAction()", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -64,7 +64,7 @@ describe("loginAction", () => {
     expect(signIn).toHaveBeenCalledWith("credentials", {
       email: "user@example.com",
       password: "password123",
-      redirectTo: "/",
+      redirectTo: "/collection",
     });
   });
 

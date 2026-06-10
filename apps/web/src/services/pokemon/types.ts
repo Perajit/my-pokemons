@@ -1,0 +1,69 @@
+import type { BondLevelKey } from "@my-pokemons/config/bond-levels";
+
+export type UserPokemonSnapshot = {
+  id: string;
+  currentFullness: number;
+  currentMood: number;
+  acquiredAt: Date;
+  faintedAt: Date | null;
+  lastFedAt: Date | null;
+  lastPlayedAt: Date | null;
+  pokemon: {
+    name: string;
+    pokeApiId: number;
+    feedCoinReward: number;
+    playCoinReward: number;
+  };
+};
+
+export type UserPokemon = {
+  id: string;
+  currentFullness: number;
+  currentMood: number;
+  acquiredAt: Date;
+  faintedAt: Date | null;
+  lastFedAt: Date | null;
+  lastPlayedAt: Date | null;
+  pokemon: {
+    name: string;
+    pokeApiId: number;
+    feedCoinReward: number;
+    playCoinReward: number;
+  };
+  heart: number;
+  activeDays: number;
+  isFainted: boolean;
+  earnedBondLevels: BondLevelKey[];
+  feedCooldownEndsAt: Date | null;
+  playCooldownEndsAt: Date | null;
+};
+
+export type AchievementUnlockedEvent = {
+  type: "achievement_unlocked";
+  achievementKey: string;
+  coinsEarned: number;
+};
+
+export type GameplayEvent = AchievementUnlockedEvent;
+
+export type GameplayActionResult = {
+  userPokemon: UserPokemon;
+  events: GameplayEvent[];
+};
+
+export type UserPokemonDTO = {
+  id: string;
+  pokemon: { name: string; pokeApiId: number };
+  currentFullness: number;
+  currentMood: number;
+  heart: number;
+  activeDays: number;
+  isFainted: boolean;
+  acquiredAt: string;
+  faintedAt: string | null;
+  feedCooldownEndsAt: string | null;
+  playCooldownEndsAt: string | null;
+  feedCoinReward: number;
+  playCoinReward: number;
+  earnedBondLevels: BondLevelKey[];
+};
