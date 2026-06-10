@@ -6,7 +6,7 @@ A web-based Pokémon petting game. Users buy Pokémon with coins, keep them aliv
 
 ```
 apps/web/          — Next.js 16, App Router, TypeScript, Tailwind (main app)
-packages/config/   — shared ESLint rules, TypeScript base config, milestone constants
+packages/config/   — shared ESLint rules, TypeScript base config, achievement constants
 packages/core/     — pure game logic functions (no DB, no framework deps)
 packages/database/ — Prisma schema + client singleton, exported as @my-pokemons/database
 ```
@@ -38,32 +38,29 @@ Tooling: pnpm workspaces + Turborepo.
 - All stat values clamped to [0, 100] after any mutation
 - **activeStreak** = `floor((now − acquiredAt) / 24h)` if active; `floor((faintedAt − acquiredAt) / 24h)` if fainted — derived, not stored
 
-## Milestone Badges (`packages/config/src/milestones.ts`)
+## Bond Levels (`packages/config/src/bond-levels.ts`)
 
-Awarded per Pokémon for consecutive active days. `BadgeType` enum is Prisma-generated — imported from `@my-pokemons/database`, not redefined.
+Awarded per Pokémon for consecutive active days. Config lives in `packages/config`; the DB uses plain string columns (`achievementType = "bondLevel"`, `achievementKey = "BOND_LEVEL_*D"`) so adding new achievement categories requires no migration.
 
 ```ts
-// BadgeType enum defined in Prisma schema (packages/database)
-// BADGE_LABELS is a const (not enum — TS enums don't support computed keys)
-export const BADGE_LABELS = {
-  [BadgeType.STREAK_1D]: "New Friend",
-  [BadgeType.STREAK_7D]: "Close Friend",
-  [BadgeType.STREAK_30D]: "Best Friend",
-  [BadgeType.STREAK_90D]: "True Companion",
-  [BadgeType.STREAK_365D]: "Lifetime Companion",
-} as const satisfies Record<BadgeType, string>;
+export type BondLevelKey =
+  "BOND_LEVEL_1D" | "BOND_LEVEL_7D" | "BOND_LEVEL_30D" | "BOND_LEVEL_90D" | "BOND_LEVEL_365D";
 
-type MilestoneConfig = { badge: BadgeType; days: number; coinReward: number };
+export const BOND_LEVEL_LABELS: Record<BondLevelKey, string> = {
+  BOND_LEVEL_1D: "New Friend",   BOND_LEVEL_7D: "Close Friend",
+  BOND_LEVEL_30D: "Best Friend", BOND_LEVEL_90D: "True Companion",
+  BOND_LEVEL_365D: "Lifetime Companion",
+};
 
-export const MILESTONE_CONFIG: MilestoneConfig[] = [
-  { badge: BadgeType.STREAK_1D, days: 1, coinReward: 5 },
-  { badge: BadgeType.STREAK_7D, days: 7, coinReward: 15 },
-  { badge: BadgeType.STREAK_30D, days: 30, coinReward: 40 },
-  { badge: BadgeType.STREAK_90D, days: 90, coinReward: 100 },
-  { badge: BadgeType.STREAK_365D, days: 365, coinReward: 300 },
+export type BondLevelConfig = { key: BondLevelKey; days: number; coinReward: number };
+
+export const BOND_LEVEL_CONFIG: readonly BondLevelConfig[] = [
+  { key: "BOND_LEVEL_1D",   days: 1,   coinReward: 5 },
+  { key: "BOND_LEVEL_7D",   days: 7,   coinReward: 15 },
+  { key: "BOND_LEVEL_30D",  days: 30,  coinReward: 40 },
+  { key: "BOND_LEVEL_90D",  days: 90,  coinReward: 100 },
+  { key: "BOND_LEVEL_365D", days: 365, coinReward: 300 },
 ];
-
-export const HEART_WEIGHTS = { fullness: 0.6, mood: 0.4 } as const;
 ```
 
 ## Data Model
@@ -78,12 +75,17 @@ Pokemon          — id, pokeApiId*, name, description, price,
                    playMoodGain, playCoinReward
 UserPokemon      — id, userId†, pokemonId,
                    currentFullness (default 60), currentMood (default 60),
-                   isActive, faintedAt?, lastFedAt?, lastPlayedAt?,
+                   faintedAt?, lastFedAt?, lastPlayedAt?,
                    lastCalculatedAt (default now), acquiredAt (default now)
-                   @@index([userId]), @@index([userId, isActive])
-UserPokemonBadge — id, userPokemonId, badge (BadgeType), earnedAt
-                   @@unique([userPokemonId, badge])
-BadgeType enum   — STREAK_1D, STREAK_7D, STREAK_30D, STREAK_90D, STREAK_365D
+                   @@index([userId])
+                   (faintedAt is the single source of truth for fainted state;
+                    `isFainted` is derived = faintedAt !== null, not stored)
+UserPokemonAchievement — id, userPokemonId, achievementType String, achievementKey String,
+                         completedAt
+                       @@unique([userPokemonId, achievementType, achievementKey])
+                       (the "coins paid" ledger: which bond-level rewards have been
+                        credited, so feed/play never double-credit;
+                        achievementType = "bondLevel", achievementKey = "BOND_LEVEL_*D")
 ```
 
 \* `@unique` † indexed
@@ -118,8 +120,11 @@ All functions are pure (no DB, no side effects). Called from API route handlers 
 - `applyPlay(currentMood, playMoodGain)` — Adds gain to mood, clamped [0,100].
   Called in the Play route, after cooldown passes.
 
-- `checkMilestones(acquiredAt, faintedAt, existingBadges, config)` — Computes `activeDays`, returns `MilestoneConfig[]` for newly unlocked milestones not yet in `existingBadges`. Caller creates badge rows and credits coins.
-  Called in Feed/Play routes only.
+- `computeDecayedState(currentFullness, currentMood, lastCalculatedAt, fullnessDecayPerHour, moodDecayPerHour, now)` — Returns `{ currentFullness, currentMood, faintedAt }` after applying decay. Pure function of primitives; used by both the read path and action handlers.
+
+- `getNewBondLevels(activeDayCount, earnedKeys)` — Returns `BondLevelConfig[]` for bond levels that qualify by `activeDayCount` and are not yet in `earnedKeys` (a `BondLevelKey[]`). Caller writes the `UserPokemonAchievement` ledger row(s) and credits coins. Called in Feed/Play service layer only. Lives in `packages/config/src/bond-levels.ts`.
+
+- `getEarnedBondLevels(activeDayCount)` — Returns `BondLevelKey[]` for every bond-level threshold reached by `activeDayCount`. **Derived, not stored**: the read path (`toUserPokemon`) sets `earnedBondLevels` from this, so the displayed icons always match the streak even before the coins are claimed on the next feed/play. Lives in `packages/config/src/bond-levels.ts`.
 
 ## API Event Flows
 
@@ -149,7 +154,7 @@ Business logic in `src/services/pokemon.ts`. Same pattern as `buyPokemonAction`.
 2. `checkCooldown(lastFedAt, FEED_COOLDOWN_SECONDS, now)` → throw `CooldownError` if blocked
 3. `newFullness = applyFeed(currentFullness, feedFullnessGain)`
 4. Add `feedCoinReward` to `user.coins`
-5. `newMilestones = checkMilestones(...)` — wired up in milestones phase; skip for now
+5. `evaluateAchievements(...)` — awards newly-earned achievements, combined coin reward credited in single `user.update`
 6. Set `lastFedAt=now`, save `UserPokemon` + `User` in DB transaction
 7. `revalidatePath("/", "layout")` — refreshes coin balance
 8. Return `{ ok: true }` or `{ ok: false; error: string }`
@@ -212,8 +217,8 @@ Can be changed to env vars later if per-environment tuning is needed.
 - [x] Gameplay
   - [x] Decay system — fullness/mood/heart, lazy sync-on-read, collection card + detail page, SWR polling
   - [x] Feed & Play — server actions, atomic cooldown guard, live countdown, coin rewards
+- [x] Achievements — streak tracking, coin rewards, `packages/config` + `packages/core`
 - [ ] Nickname — `UserPokemon.nickname`, defaults to species name at acquire; rename UI on detail page
-- [ ] Milestones & badges — streak tracking, coin rewards, `packages/config` + `packages/core`
 - [ ] Account management — avatar, profile settings, account menu
 
 ## Dev Workflow
@@ -223,12 +228,6 @@ Unit and component tests are colocated with their source as `*.test.ts` /
 `// @vitest-environment jsdom` docblock at the top of the file. Integration
 tests live in `apps/web/tests/integration/`. E2E specs live in
 `apps/web/tests/e2e/`.
-
-### TDD workflow
-
-Write the test first, then the implementation. Skip the "run to see red"
-step — go straight to writing the implementation, then run the test once.
-The expected-to-fail run wastes a cycle.
 
 ### Definition of done
 
@@ -259,11 +258,20 @@ DATABASE_URL_TEST=postgresql://postgres:postgres@localhost:5432/my_pokemons_test
 
 Integration test files run sequentially (`fileParallelism: false`) because they share one test database and truncate tables in `beforeEach` — parallel execution causes files to delete each other's seed data mid-test.
 
-### E2E — run occasionally, not on every change
+### E2E — run only when it buys something unit/integration tests can't
 
 Playwright drives a real browser against a real DB, so it is slow. Run it
-before finishing a feature, or when auth / routing / page flows change — not
-after every edit.
+only for:
+
+1. **Critical user journeys** — core loop actions where UI depends on atomic DB state
+   (feed/play triggers, coin credits, bond-level toasts).
+2. **Infrastructure & routing** — changes to Next.js Middleware, auth sessions, or
+   App Router structure (new routes, layout changes, redirect logic).
+3. **Feature completion** — final sanity check once a major feature is 100% done,
+   before declaring it complete.
+
+Do NOT run e2e for internal component refactors, pure styling changes, or logic
+already covered by integration tests.
 
 ```bash
 pnpm dev                                       # terminal 1
