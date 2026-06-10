@@ -34,12 +34,12 @@ import { NavLinks } from "./nav-links";
 
 describe("NavLinks", () => {
   it("renders both nav links", () => {
-    (usePathname as Mock).mockReturnValue("/");
+    (usePathname as Mock).mockReturnValue("/collection");
     render(<NavLinks />);
 
     expect(screen.getByRole("link", { name: /collection/i })).toHaveAttribute(
       "href",
-      "/",
+      "/collection",
     );
     expect(screen.getByRole("link", { name: /shop/i })).toHaveAttribute(
       "href",
@@ -47,8 +47,8 @@ describe("NavLinks", () => {
     );
   });
 
-  it("marks the dashboard link active on /", () => {
-    (usePathname as Mock).mockReturnValue("/");
+  it("marks the collection link active on /collection", () => {
+    (usePathname as Mock).mockReturnValue("/collection");
     render(<NavLinks />);
 
     expect(screen.getByRole("link", { name: /collection/i })).toHaveAttribute(
@@ -88,7 +88,7 @@ describe("NavLinks", () => {
   });
 
   it("cancels the pending requestAnimationFrame on unmount", () => {
-    (usePathname as Mock).mockReturnValue("/");
+    (usePathname as Mock).mockReturnValue("/collection");
     const cancelSpy = vi.spyOn(window, "cancelAnimationFrame");
     const { unmount } = render(<NavLinks />);
     unmount();
@@ -97,7 +97,7 @@ describe("NavLinks", () => {
   });
 
   it("adds the transition class to the indicator after the rAF fires", () => {
-    (usePathname as Mock).mockReturnValue("/");
+    (usePathname as Mock).mockReturnValue("/collection");
     const rafSpy = vi
       .spyOn(window, "requestAnimationFrame")
       .mockImplementation((cb: FrameRequestCallback) => {

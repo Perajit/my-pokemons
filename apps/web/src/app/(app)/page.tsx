@@ -1,15 +1,7 @@
-import { auth } from "@/lib/auth";
-import { getMyPokemons, toClientPokemon } from "@/services/pokemon";
-import { CollectionGrid } from "./collection/_components/collection-grid";
+import { redirect } from "next/navigation";
 
-export default async function DashboardPage() {
-  const session = await auth();
-  if (!session) {
-    return null;
-  }
-
-  const pokemons = await getMyPokemons(session.user.id);
-  const initial = pokemons.map(toClientPokemon);
-
-  return <CollectionGrid initial={initial} />;
+// The collection list lives at /collection; / is the landing route and
+// redirects there (leaves room for a real home page later).
+export default function Home() {
+  redirect("/collection");
 }
