@@ -96,3 +96,23 @@ export class InsufficientCoinsError extends AppError {
     return 400;
   }
 }
+
+export class NotFaintedError extends AppError {
+  constructor() {
+    super("GAMEPLAY", "NOT_FAINTED", "Pokémon hasn't fainted");
+    this.name = "NotFaintedError";
+  }
+  get status() {
+    return 400;
+  }
+}
+
+export class InsufficientItemsError extends AppError {
+  constructor() {
+    super("GAMEPLAY", "INSUFFICIENT_ITEMS", "You don't have that item");
+    this.name = "InsufficientItemsError";
+  }
+  get status() {
+    return 400;
+  }
+}

@@ -1,4 +1,9 @@
-import { calculateHeart, cooldownEndsAt, activeDays } from "@my-pokemons/core";
+import {
+  calculateHeart,
+  cooldownEndsAt,
+  activeStreakDays,
+  bondActiveDays,
+} from "@my-pokemons/core";
 import { getEarnedBondLevels } from "@my-pokemons/config/bond-levels";
 import { FEED_COOLDOWN_SECONDS, PLAY_COOLDOWN_SECONDS } from "./cooldowns";
 import type { UserPokemon, UserPokemonSnapshot, UserPokemonDto } from "./types";
@@ -8,10 +13,17 @@ export function toUserPokemon(
   snapshot: UserPokemonSnapshot,
   now: Date,
 ): UserPokemon {
-  const activeDayCount = activeDays(
+  const activeStreak = activeStreakDays(
+    snapshot.acquiredAt,
+    snapshot.lastRevivedAt,
+    snapshot.faintedAt,
+    now,
+  );
+  const bondDays = bondActiveDays(
     snapshot.acquiredAt,
     snapshot.faintedAt,
     now,
+    snapshot.totalFaintedDurationMs,
   );
   return {
     id: snapshot.id,
@@ -23,9 +35,9 @@ export function toUserPokemon(
     lastPlayedAt: snapshot.lastPlayedAt,
     pokemon: snapshot.pokemon,
     heart: calculateHeart(snapshot.currentFullness, snapshot.currentMood),
-    activeDays: activeDayCount,
+    activeStreak,
     isFainted: snapshot.faintedAt !== null,
-    earnedBondLevels: getEarnedBondLevels(activeDayCount),
+    earnedBondLevels: getEarnedBondLevels(bondDays),
     feedCooldownEndsAt: cooldownEndsAt(
       snapshot.lastFedAt,
       FEED_COOLDOWN_SECONDS,
@@ -48,7 +60,7 @@ export function toUserPokemonDto(userPokemon: UserPokemon): UserPokemonDto {
     currentFullness: userPokemon.currentFullness,
     currentMood: userPokemon.currentMood,
     heart: userPokemon.heart,
-    activeDays: userPokemon.activeDays,
+    activeStreak: userPokemon.activeStreak,
     isFainted: userPokemon.isFainted,
     acquiredAt: userPokemon.acquiredAt.toISOString(),
     faintedAt: userPokemon.faintedAt

@@ -3,8 +3,12 @@
 import { describe, it, expect, beforeEach, afterAll } from "vitest";
 
 import { db } from "@/lib/db";
-import { grantItem, getUserItemQuantity } from "@/services/inventory";
-import { NotFoundError } from "@/services/errors";
+import {
+  grantItem,
+  consumeItem,
+  getUserItemQuantity,
+} from "@/services/inventory";
+import { NotFoundError, InsufficientItemsError } from "@/services/errors";
 import { seedUser, seedItem, seedUserItem, resetGameplayTables } from "./seed";
 
 beforeEach(resetGameplayTables);
@@ -34,6 +38,34 @@ describe("grantItem()", () => {
     );
     expect(await getUserItemQuantity(user.id, "REVIVE")).toBe(5);
     expect(await db.userItem.count()).toBe(1);
+  });
+});
+
+describe("consumeItem()", () => {
+  it("throws NotFoundError for an unknown item key", async () => {
+    const user = await seedUser(500);
+    await expect(
+      db.$transaction((transaction) =>
+        consumeItem(transaction, user.id, "REVIVE"),
+      ),
+    ).rejects.toThrow(NotFoundError);
+  });
+
+  it("decrements the held quantity, and throws InsufficientItemsError at zero", async () => {
+    const user = await seedUser(500);
+    const item = await seedItem();
+    await seedUserItem(user.id, item.id, 1);
+
+    await db.$transaction((transaction) =>
+      consumeItem(transaction, user.id, "REVIVE"),
+    );
+    expect(await getUserItemQuantity(user.id, "REVIVE")).toBe(0);
+
+    await expect(
+      db.$transaction((transaction) =>
+        consumeItem(transaction, user.id, "REVIVE"),
+      ),
+    ).rejects.toThrow(InsufficientItemsError);
   });
 });
 

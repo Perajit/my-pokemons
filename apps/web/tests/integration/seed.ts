@@ -32,6 +32,8 @@ type UserPokemonOverrides = Partial<{
   currentFullness: number;
   currentMood: number;
   faintedAt: Date | null;
+  lastRevivedAt: Date | null;
+  totalFaintedDurationMs: number;
   lastCalculatedAt: Date;
   acquiredAt: Date;
 }>;
@@ -48,6 +50,8 @@ export function seedUserPokemon(
       currentFullness: overrides.currentFullness ?? 60,
       currentMood: overrides.currentMood ?? 60,
       faintedAt: overrides.faintedAt ?? null,
+      lastRevivedAt: overrides.lastRevivedAt ?? null,
+      totalFaintedDurationMs: overrides.totalFaintedDurationMs ?? 0,
       lastCalculatedAt: overrides.lastCalculatedAt ?? new Date(),
       acquiredAt: overrides.acquiredAt ?? new Date(),
     },

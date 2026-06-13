@@ -12,7 +12,7 @@ function makePokemon(overrides: Partial<UserPokemonDto> = {}): UserPokemonDto {
     currentFullness: 60,
     currentMood: 60,
     heart: 60,
-    activeDays: 1,
+    activeStreak: 1,
     isFainted: false,
     acquiredAt: "2024-05-31T12:00:00Z",
     faintedAt: null,

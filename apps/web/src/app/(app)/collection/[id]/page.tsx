@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getUserPokemonDto } from "@/services/user-pokemon";
+import { getUserItemQuantity } from "@/services/inventory";
 import { NotOwnedError } from "@/services/errors";
 import { PokemonDetail } from "./_components/pokemon-detail";
 
@@ -15,11 +16,14 @@ export default async function PokemonDetailPage({
   }
 
   const { id } = await params;
-  const initial = await getUserPokemonDto(session.user.id, id).catch((err) => {
-    if (err instanceof NotOwnedError) {
-      notFound();
-    }
-    throw err;
-  });
-  return <PokemonDetail initial={initial} />;
+  const [initial, reviveCount] = await Promise.all([
+    getUserPokemonDto(session.user.id, id).catch((err) => {
+      if (err instanceof NotOwnedError) {
+        notFound();
+      }
+      throw err;
+    }),
+    getUserItemQuantity(session.user.id, "REVIVE"),
+  ]);
+  return <PokemonDetail initial={initial} reviveCount={reviveCount} />;
 }

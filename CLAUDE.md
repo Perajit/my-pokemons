@@ -36,7 +36,10 @@ Tooling: pnpm workspaces + Turborepo.
 - **Feed** → +`feedFullnessGain` Fullness, +`feedCoinReward` coins; cooldown: `FEED_COOLDOWN_SECONDS`
 - **Play** → +`playMoodGain` Mood, +`playCoinReward` coins; cooldown: `PLAY_COOLDOWN_SECONDS`
 - All stat values clamped to [0, 100] after any mutation
-- **activeStreak** = `floor((now − acquiredAt) / 24h)` if active; `floor((faintedAt − acquiredAt) / 24h)` if fainted — derived, not stored
+- **Revive** item → wakes a fainted Pokémon: clears `faintedAt`, restores Fullness & Mood to `REVIVE_RESTORE_VALUE` (50), consumes one `REVIVE` `UserItem`. Detail-page action.
+- Two distinct time metrics (both derived, never stored):
+  - **activeStreak** (display) = `0` while fainted, else `floor((now − (lastRevivedAt ?? acquiredAt)) / 24h)` — resets to 0 on faint, counts from the last revive.
+  - **bondActiveDays** (progression, drives bond levels) = `floor(((faintedAt ?? now) − acquiredAt − totalFaintedDurationMs) / 24h)` — cumulative active days excluding fainted downtime; monotonic across faints/revives (on revive, the just-ended downtime is folded into `totalFaintedDurationMs`), so bond badges are never lost.
 
 ## Bond Levels (`packages/config/src/bond-levels.ts`)
 
@@ -141,7 +144,7 @@ All functions are pure (no DB, no side effects). Called from API route handlers 
 ### GET /api/my-pokemons or /api/my-pokemons/[id]
 
 1. Run shared sync steps (for all or one UserPokemon)
-2. Compute `calculateHeart(fullness, mood)` and `activeDays` for response
+2. Compute `calculateHeart(fullness, mood)` and `activeStreak` for response
 3. Compute `cooldownEndsAt` for feed and play from `lastFedAt`/`lastPlayedAt` + cooldown minutes — client computes remaining seconds from `Date.now()` to avoid timer drift
 4. Return enriched data
 
@@ -217,6 +220,8 @@ Can be changed to env vars later if per-environment tuning is needed.
 - [x] Gameplay
   - [x] Decay system — fullness/mood/heart, lazy sync-on-read, collection card + detail page, SWR polling
   - [x] Feed & Play — server actions, atomic cooldown guard, live countdown, coin rewards
+  - [x] Items & shop — Item/UserItem catalog, inventory (grant/consume), buy Pokémon & items
+  - [x] Revive — spend a Revive to wake a fainted Pokémon at 50% HP; streak resets, bond preserved
 - [x] Achievements — streak tracking, coin rewards, `packages/config` + `packages/core`
 - [ ] Nickname — `UserPokemon.nickname`, defaults to species name at acquire; rename UI on detail page
 - [ ] Account management — avatar, profile settings, account menu

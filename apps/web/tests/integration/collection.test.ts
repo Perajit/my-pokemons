@@ -68,9 +68,10 @@ describe("getUserCollection()", () => {
     expect(result[0].isFainted).toBe(true);
     expect(result[0].currentFullness).toBe(0);
     expect(result[0].currentMood).toBe(0);
-    // Faints 50h after acquire (the later zero-crossing) → 2-day streak, even
-    // though we only read it 60h later. Achievements freeze at the real death time.
-    expect(result[0].activeDays).toBe(2);
+    // Active streak resets to 0 while fainted. Bond progress, however, freezes
+    // at the real death time (50h after acquire = 2 alive days, the later
+    // zero-crossing) — not at read time 60h later — so the 1d badge stays.
+    expect(result[0].activeStreak).toBe(0);
     expect(result[0].earnedBondLevels).toEqual(["BOND_LEVEL_1D"]);
 
     const persisted = await db.userPokemon.findUnique({ where: { id: up.id } });
@@ -98,7 +99,7 @@ describe("getUserCollection()", () => {
     expect(persisted!.lastCalculatedAt.getTime()).toBe(oldLastCalc.getTime());
   });
 
-  it("derives streak achievements from activeDays without any feed/play", async () => {
+  it("derives streak achievements from activeStreak without any feed/play", async () => {
     const user = await seedUser(500);
     const pokemon = await seedPokemon();
     const eightDaysAgo = new Date(Date.now() - 8 * 24 * 60 * 60 * 1000);

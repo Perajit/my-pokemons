@@ -8,6 +8,8 @@ export type UserPokemonSnapshot = {
   faintedAt: Date | null;
   lastFedAt: Date | null;
   lastPlayedAt: Date | null;
+  lastRevivedAt: Date | null;
+  totalFaintedDurationMs: number;
   pokemon: {
     name: string;
     pokeApiId: number;
@@ -31,7 +33,7 @@ export type UserPokemon = {
     playCoinReward: number;
   };
   heart: number;
-  activeDays: number;
+  activeStreak: number;
   isFainted: boolean;
   earnedBondLevels: BondLevelKey[];
   feedCooldownEndsAt: Date | null;
@@ -56,10 +58,16 @@ export type AchievementUnlockedEvent = {
   coinsEarned: number;
 };
 
+export type PokemonRevivedEvent = {
+  type: "pokemon_revived";
+  pokemonName: string;
+};
+
 export type GameplayEvent =
   | PokemonFedEvent
   | PokemonPlayedEvent
-  | AchievementUnlockedEvent;
+  | AchievementUnlockedEvent
+  | PokemonRevivedEvent;
 
 export type GameplayActionResult = {
   userPokemon: UserPokemon;
@@ -72,7 +80,7 @@ export type UserPokemonDto = {
   currentFullness: number;
   currentMood: number;
   heart: number;
-  activeDays: number;
+  activeStreak: number;
   isFainted: boolean;
   acquiredAt: string;
   faintedAt: string | null;

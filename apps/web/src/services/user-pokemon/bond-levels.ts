@@ -1,4 +1,4 @@
-import { activeDays } from "@my-pokemons/core";
+import { bondActiveDays } from "@my-pokemons/core";
 import type { UserPokemonEntity } from "@my-pokemons/database";
 import {
   getNewBondLevels,
@@ -14,7 +14,12 @@ export function evaluateBondLevels(
   totalBondLevelCoins: number;
   events: AchievementUnlockedEvent[];
 } {
-  const days = activeDays(entity.acquiredAt, entity.faintedAt, now);
+  const days = bondActiveDays(
+    entity.acquiredAt,
+    entity.faintedAt,
+    now,
+    entity.totalFaintedDurationMs,
+  );
   const earnedKeys = entity.achievements
     .filter((a) => a.achievementType === "bondLevel")
     .map((a) => a.achievementKey as BondLevelKey);

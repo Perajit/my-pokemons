@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import useSWR from "swr";
 import { toast } from "sonner";
@@ -15,11 +16,12 @@ import {
   fullnessLabel,
   moodLabel,
 } from "@/app/(app)/collection/_components/pokemon-levels";
-import { feedAction, playAction } from "../../actions";
+import { feedAction, playAction, reviveAction } from "../../actions";
 import { StatRow } from "./stat-row";
 import { ActionButton } from "./action-button";
 import { StreakHeader } from "./streak-header";
 import { BondLevelSteps } from "./bond-level-steps";
+import { ReviveButton } from "./revive-button";
 import { notifyGameplayEvents } from "./gameplay-event-toasts";
 
 const POLL_INTERVAL_MS =
@@ -36,7 +38,14 @@ function spriteUrl(pokeApiId: number) {
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokeApiId}.png`;
 }
 
-export function PokemonDetail({ initial }: { initial: UserPokemonDto }) {
+export function PokemonDetail({
+  initial,
+  reviveCount = 0,
+}: {
+  initial: UserPokemonDto;
+  reviveCount?: number;
+}) {
+  const router = useRouter();
   const { data: pokemon = initial, mutate } = useSWR<UserPokemonDto>(
     `/api/collection/${initial.id}`,
     apiFetcher,
@@ -49,6 +58,7 @@ export function PokemonDetail({ initial }: { initial: UserPokemonDto }) {
 
   const [feedPending, startFeedTransition] = useTransition();
   const [playPending, startPlayTransition] = useTransition();
+  const [revivePending, startReviveTransition] = useTransition();
 
   const acquiredAt = new Date(pokemon.acquiredAt);
   const fullness = Math.round(pokemon.currentFullness);
@@ -75,6 +85,19 @@ export function PokemonDetail({ initial }: { initial: UserPokemonDto }) {
         toast.error(result.error.message);
       }
       mutate();
+    });
+  }
+
+  function handleRevive() {
+    startReviveTransition(async () => {
+      const result = await reviveAction(pokemon.id);
+      if (result.ok) {
+        notifyGameplayEvents(result.data.events);
+        mutate(); // refresh the now-alive pokemon
+        router.refresh(); // refresh the server-fetched reviveCount
+      } else {
+        toast.error(result.error.message);
+      }
     });
   }
 
@@ -108,7 +131,7 @@ export function PokemonDetail({ initial }: { initial: UserPokemonDto }) {
             <p className="text-sm text-stone-500">
               Since {dateFormatter.format(acquiredAt)}
             </p>
-            <StreakHeader activeDays={pokemon.activeDays} />
+            <StreakHeader activeStreak={pokemon.activeStreak} />
           </div>
           <BondLevelSteps earned={pokemon.earnedBondLevels} />
 
@@ -149,9 +172,16 @@ export function PokemonDetail({ initial }: { initial: UserPokemonDto }) {
               </div>
             </>
           ) : (
-            <div className="flex items-center gap-2 rounded-full bg-stone-100 px-4 py-2 text-sm font-medium text-stone-500">
-              <Skull className="size-4" aria-hidden />
-              <span>Fainted</span>
+            <div className="flex flex-col items-center gap-3">
+              <div className="flex items-center gap-2 rounded-full bg-stone-100 px-4 py-2 text-sm font-medium text-stone-500">
+                <Skull className="size-4" aria-hidden />
+                <span>Fainted</span>
+              </div>
+              <ReviveButton
+                reviveCount={reviveCount}
+                isPending={revivePending}
+                onRevive={handleRevive}
+              />
             </div>
           )}
         </CardContent>

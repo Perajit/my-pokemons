@@ -15,3 +15,4 @@ export {
 } from "./core";
 export { feedPokemon } from "./feed";
 export { playWithPokemon } from "./play";
+export { revivePokemon } from "./revive";

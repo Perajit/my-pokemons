@@ -112,7 +112,7 @@ export async function commitActionWithCooldownGuard(
 }
 
 // Records the "coins paid" ledger for newly-earned bond levels (dedup guard for
-// coin crediting). Displayed bond levels are derived from activeDays at read
+// coin crediting). Displayed bond levels are derived from bondActiveDays at read
 // time — nothing else to persist here.
 export async function recordAchievementRewards(
   transaction: PrismaTransaction,
@@ -149,6 +149,8 @@ export function buildPostActionUserPokemon(
     lastFedAt: lastActionField === "lastFedAt" ? now : entity.lastFedAt,
     lastPlayedAt:
       lastActionField === "lastPlayedAt" ? now : entity.lastPlayedAt,
+    lastRevivedAt: entity.lastRevivedAt,
+    totalFaintedDurationMs: entity.totalFaintedDurationMs,
     pokemon: {
       name: entity.pokemon.name,
       pokeApiId: entity.pokemon.pokeApiId,

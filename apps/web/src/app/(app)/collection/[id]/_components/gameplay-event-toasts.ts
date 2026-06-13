@@ -25,6 +25,8 @@ const gameplayToastRenderers: GameplayToastRenderers = {
     toast.success(
       `Earned: ${BOND_LEVEL_LABELS[event.achievementKey as BondLevelKey]} (+${event.coinsEarned} coins)`,
     ),
+  pokemon_revived: (event) =>
+    toast.success(`${event.pokemonName} was revived!`),
 };
 
 export function notifyGameplayEvents(events: GameplayEvent[]): void {

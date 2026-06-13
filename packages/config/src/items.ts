@@ -15,6 +15,6 @@ export const ITEM_CONFIG: readonly ItemConfig[] = [
     key: "REVIVE",
     name: "Revive",
     description: "Wake a fainted Pokémon and restore it to 50% HP.",
-    price: 150,
+    price: 50,
   },
 ];

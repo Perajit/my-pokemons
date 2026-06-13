@@ -14,7 +14,7 @@ function makeUserPokemon(overrides: Partial<UserPokemon> = {}): UserPokemon {
     acquiredAt: new Date("2024-05-31T12:00:00Z"),
     pokemon: basePokemon,
     heart: 60,
-    activeDays: 1,
+    activeStreak: 1,
     isFainted: false,
     feedCooldownEndsAt: null,
     playCooldownEndsAt: null,

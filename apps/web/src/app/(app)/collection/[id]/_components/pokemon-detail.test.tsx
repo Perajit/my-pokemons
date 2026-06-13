@@ -32,18 +32,24 @@ vi.mock("sonner", () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }));
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: vi.fn() }),
+}));
+
 vi.mock("../../actions", () => ({
   feedAction: vi.fn(),
   playAction: vi.fn(),
+  reviveAction: vi.fn(),
 }));
 
 import { toast } from "sonner";
-import { feedAction, playAction } from "../../actions";
+import { feedAction, playAction, reviveAction } from "../../actions";
 import type { UserPokemonDto } from "@/services/user-pokemon";
 import { PokemonDetail } from "./pokemon-detail";
 
 const mockFeed = feedAction as ReturnType<typeof vi.fn>;
 const mockPlay = playAction as ReturnType<typeof vi.fn>;
+const mockRevive = reviveAction as ReturnType<typeof vi.fn>;
 
 function makePokemon(overrides: Partial<UserPokemonDto> = {}): UserPokemonDto {
   return {
@@ -52,7 +58,7 @@ function makePokemon(overrides: Partial<UserPokemonDto> = {}): UserPokemonDto {
     currentFullness: 80,
     currentMood: 70,
     heart: 76,
-    activeDays: 5,
+    activeStreak: 5,
     isFainted: false,
     acquiredAt: "2024-05-26T12:00:00Z",
     faintedAt: null,
@@ -85,7 +91,7 @@ describe("PokemonDetail", () => {
   });
 
   it("renders the streak header with the active day count", () => {
-    render(<PokemonDetail initial={makePokemon({ activeDays: 1 })} />);
+    render(<PokemonDetail initial={makePokemon({ activeStreak: 1 })} />);
     expect(screen.getByText(/1 day streak/i)).toBeInTheDocument();
   });
 
@@ -305,5 +311,35 @@ describe("PokemonDetail", () => {
 
     expect(mockPlay).toHaveBeenCalledWith("up-1");
     expect(toast.error).toHaveBeenCalledWith("Action on cooldown");
+  });
+
+  const faintedRevive = () =>
+    makePokemon({ isFainted: true, currentFullness: 0, currentMood: 0 });
+
+  it("revives a fainted pokemon and toasts the pokemon_revived event", async () => {
+    const user = userEvent.setup();
+    mockRevive.mockResolvedValue({
+      ok: true,
+      data: {
+        events: [{ type: "pokemon_revived", pokemonName: "Pikachu" }],
+      },
+    });
+    render(<PokemonDetail initial={faintedRevive()} reviveCount={2} />);
+
+    await act(async () => {
+      await user.click(screen.getByRole("button", { name: /revive/i }));
+    });
+
+    expect(mockRevive).toHaveBeenCalledWith("up-1");
+    expect(toast.success).toHaveBeenCalledWith("Pikachu was revived!");
+  });
+
+  it("disables Revive and links to the shop when no Revive is owned", () => {
+    render(<PokemonDetail initial={faintedRevive()} reviveCount={0} />);
+
+    expect(screen.getByRole("button", { name: /revive/i })).toBeDisabled();
+    expect(
+      screen.getByRole("link", { name: /get a revive in the shop/i }),
+    ).toHaveAttribute("href", "/shop");
   });
 });

@@ -4,18 +4,30 @@ vi.mock("@/lib/auth", () => ({ auth: vi.fn() }));
 vi.mock("@/services/user-pokemon", () => ({
   feedPokemon: vi.fn(),
   playWithPokemon: vi.fn(),
+  revivePokemon: vi.fn(),
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-import { feedPokemon, playWithPokemon } from "@/services/user-pokemon";
-import { NotOwnedError, FaintedError, CooldownError } from "@/services/errors";
-import { feedAction, playAction } from "./actions";
+import {
+  feedPokemon,
+  playWithPokemon,
+  revivePokemon,
+} from "@/services/user-pokemon";
+import {
+  NotOwnedError,
+  FaintedError,
+  CooldownError,
+  NotFaintedError,
+  InsufficientItemsError,
+} from "@/services/errors";
+import { feedAction, playAction, reviveAction } from "./actions";
 
 const mockAuth = auth as ReturnType<typeof vi.fn>;
 const mockFeed = feedPokemon as ReturnType<typeof vi.fn>;
 const mockPlay = playWithPokemon as ReturnType<typeof vi.fn>;
+const mockRevive = revivePokemon as ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -159,6 +171,70 @@ describe("playAction()", () => {
         code: "COOLDOWN",
         message: "Action on cooldown",
         metadata: { cooldownEndsAt: "2024-06-01T12:20:00.000Z" },
+      },
+    });
+  });
+});
+
+describe("reviveAction()", () => {
+  it("returns UNAUTHORIZED payload when session is missing", async () => {
+    mockAuth.mockResolvedValue(null);
+
+    const result = await reviveAction("up-1");
+
+    expect(result).toEqual({
+      ok: false,
+      error: { type: "AUTH", code: "UNAUTHORIZED", message: "Unauthorized" },
+    });
+    expect(mockRevive).not.toHaveBeenCalled();
+  });
+
+  it("calls revivePokemon, revalidates layout, and returns events on success", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+    mockRevive.mockResolvedValue({
+      userPokemon: {},
+      events: [{ type: "pokemon_revived", pokemonName: "Pikachu" }],
+    });
+
+    const result = await reviveAction("up-1");
+
+    expect(mockRevive).toHaveBeenCalledWith("user-1", "up-1");
+    expect(revalidatePath).toHaveBeenCalledWith("/", "layout");
+    expect(result).toEqual({
+      ok: true,
+      data: { events: [{ type: "pokemon_revived", pokemonName: "Pikachu" }] },
+    });
+  });
+
+  it("maps NotFaintedError to GAMEPLAY/NOT_FAINTED payload", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+    mockRevive.mockRejectedValue(new NotFaintedError());
+
+    const result = await reviveAction("up-1");
+
+    expect(result).toEqual({
+      ok: false,
+      error: {
+        type: "GAMEPLAY",
+        code: "NOT_FAINTED",
+        message: "Pokémon hasn't fainted",
+      },
+    });
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("maps InsufficientItemsError to GAMEPLAY/INSUFFICIENT_ITEMS payload", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+    mockRevive.mockRejectedValue(new InsufficientItemsError());
+
+    const result = await reviveAction("up-1");
+
+    expect(result).toEqual({
+      ok: false,
+      error: {
+        type: "GAMEPLAY",
+        code: "INSUFFICIENT_ITEMS",
+        message: "You don't have that item",
       },
     });
   });

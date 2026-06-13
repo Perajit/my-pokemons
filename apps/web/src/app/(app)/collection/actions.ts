@@ -6,6 +6,7 @@ import { UnauthorizedError } from "@/services/errors";
 import {
   feedPokemon,
   playWithPokemon,
+  revivePokemon,
   type GameplayEvent,
 } from "@/services/user-pokemon";
 import { runAction, type ActionResult } from "@/lib/action-result";
@@ -33,6 +34,20 @@ export async function playAction(
       throw new UnauthorizedError();
     }
     const result = await playWithPokemon(session.user.id, userPokemonId);
+    revalidatePath("/", "layout");
+    return { events: result.events };
+  });
+}
+
+export async function reviveAction(
+  userPokemonId: string,
+): Promise<ActionResult<{ events: GameplayEvent[] }>> {
+  return runAction(async () => {
+    const session = await auth();
+    if (!session) {
+      throw new UnauthorizedError();
+    }
+    const result = await revivePokemon(session.user.id, userPokemonId);
     revalidatePath("/", "layout");
     return { events: result.events };
   });

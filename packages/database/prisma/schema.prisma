@@ -66,6 +66,8 @@ model UserPokemon {
   faintedAt        DateTime?
   lastFedAt        DateTime?
   lastPlayedAt     DateTime?
+  lastRevivedAt          DateTime?
+  totalFaintedDurationMs Float        @default(0)
   lastCalculatedAt DateTime           @default(now())
   acquiredAt       DateTime           @default(now())
   user             User               @relation(fields: [userId], references: [id])

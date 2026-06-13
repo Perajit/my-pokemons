@@ -1,1 +1,1 @@
-export { grantItem, getUserItemQuantity } from "./inventory";
+export { grantItem, consumeItem, getUserItemQuantity } from "./inventory";

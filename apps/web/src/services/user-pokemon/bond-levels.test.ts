@@ -15,6 +15,8 @@ function makeEntity(overrides = {}) {
     faintedAt: null,
     lastFedAt: null,
     lastPlayedAt: null,
+    lastRevivedAt: null,
+    totalFaintedDurationMs: 0,
     lastCalculatedAt: new Date("2024-06-01T11:00:00Z"),
     acquiredAt: new Date("2024-05-31T12:00:00Z"),
     pokemon: basePokemon,
