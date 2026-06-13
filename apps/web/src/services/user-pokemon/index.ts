@@ -1,13 +1,17 @@
 export type {
   UserPokemon,
   UserPokemonSnapshot,
-  UserPokemonDTO,
+  UserPokemonDto,
   GameplayEvent,
   AchievementUnlockedEvent,
   GameplayActionResult,
 } from "./types";
 export type { UserPokemonEntity } from "@my-pokemons/database";
-export { getUserCollection, getUserPokemon } from "./read";
+export {
+  getUserCollection,
+  getUserPokemon,
+  getUserCollectionDto,
+  getUserPokemonDto,
+} from "./core";
 export { feedPokemon } from "./feed";
 export { playWithPokemon } from "./play";
-export { toUserPokemonDTO } from "./serializers";

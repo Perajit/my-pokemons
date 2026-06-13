@@ -1,15 +1,9 @@
-import {
-  computeDecayedState,
-  calculateHeart,
-  cooldownEndsAt,
-  activeDays,
-} from "@my-pokemons/core";
-import { getEarnedBondLevels } from "@my-pokemons/config/bond-levels";
+import { computeDecayedState } from "@my-pokemons/core";
 import type { UserPokemonEntity } from "@my-pokemons/database";
 import { db } from "@/lib/db";
 import { NotOwnedError } from "../errors";
-import { FEED_COOLDOWN_SECONDS, PLAY_COOLDOWN_SECONDS } from "./cooldowns";
-import type { UserPokemon, UserPokemonSnapshot } from "./types";
+import { toUserPokemon, toUserPokemonDto } from "./mappers";
+import type { UserPokemon, UserPokemonDto } from "./types";
 
 async function syncDecayState(
   entity: UserPokemonEntity,
@@ -36,39 +30,8 @@ async function syncDecayState(
   return { ...entity, ...syncedData };
 }
 
-export function toUserPokemon(
-  snapshot: UserPokemonSnapshot,
-  now: Date,
-): UserPokemon {
-  const activeDayCount = activeDays(
-    snapshot.acquiredAt,
-    snapshot.faintedAt,
-    now,
-  );
-  return {
-    id: snapshot.id,
-    currentFullness: snapshot.currentFullness,
-    currentMood: snapshot.currentMood,
-    acquiredAt: snapshot.acquiredAt,
-    faintedAt: snapshot.faintedAt,
-    lastFedAt: snapshot.lastFedAt,
-    lastPlayedAt: snapshot.lastPlayedAt,
-    pokemon: snapshot.pokemon,
-    heart: calculateHeart(snapshot.currentFullness, snapshot.currentMood),
-    activeDays: activeDayCount,
-    isFainted: snapshot.faintedAt !== null,
-    earnedBondLevels: getEarnedBondLevels(activeDayCount),
-    feedCooldownEndsAt: cooldownEndsAt(
-      snapshot.lastFedAt,
-      FEED_COOLDOWN_SECONDS,
-    ),
-    playCooldownEndsAt: cooldownEndsAt(
-      snapshot.lastPlayedAt,
-      PLAY_COOLDOWN_SECONDS,
-    ),
-  };
-}
-
+// Domain reads (internal): callers inside the service layer that need the full
+// domain object. Pages and API routes use the Dto reads below.
 export async function getUserCollection(
   userId: string,
 ): Promise<UserPokemon[]> {
@@ -106,4 +69,21 @@ export async function getUserPokemon(
   }
   const synced = await syncDecayState(entity, now);
   return toUserPokemon(synced, now);
+}
+
+// DTO reads (public): the serialization-ready shape that pages and the
+// `/api/collection` routes return. Mapping lives here, never in the caller.
+export async function getUserCollectionDto(
+  userId: string,
+): Promise<UserPokemonDto[]> {
+  const collection = await getUserCollection(userId);
+  return collection.map(toUserPokemonDto);
+}
+
+export async function getUserPokemonDto(
+  userId: string,
+  userPokemonId: string,
+): Promise<UserPokemonDto> {
+  const userPokemon = await getUserPokemon(userId, userPokemonId);
+  return toUserPokemonDto(userPokemon);
 }

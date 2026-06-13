@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { getUserPokemon, toUserPokemonDTO } from "@/services/pokemon";
+import { getUserPokemonDto } from "@/services/user-pokemon";
 import { NotOwnedError } from "@/services/errors";
 import { PokemonDetail } from "./_components/pokemon-detail";
 
@@ -15,11 +15,11 @@ export default async function PokemonDetailPage({
   }
 
   const { id } = await params;
-  const pokemon = await getUserPokemon(session.user.id, id).catch((err) => {
+  const initial = await getUserPokemonDto(session.user.id, id).catch((err) => {
     if (err instanceof NotOwnedError) {
       notFound();
     }
     throw err;
   });
-  return <PokemonDetail initial={toUserPokemonDTO(pokemon)} />;
+  return <PokemonDetail initial={initial} />;
 }

@@ -4,7 +4,7 @@ import {
   getNewBondLevels,
   type BondLevelKey,
 } from "@my-pokemons/config/bond-levels";
-import type { GameplayEvent } from "./types";
+import type { AchievementUnlockedEvent } from "./types";
 
 export function evaluateBondLevels(
   entity: UserPokemonEntity,
@@ -12,7 +12,7 @@ export function evaluateBondLevels(
 ): {
   newlyEarnedBondLevels: { achievementType: string; achievementKey: string }[];
   totalBondLevelCoins: number;
-  events: GameplayEvent[];
+  events: AchievementUnlockedEvent[];
 } {
   const days = activeDays(entity.acquiredAt, entity.faintedAt, now);
   const earnedKeys = entity.achievements
@@ -23,7 +23,7 @@ export function evaluateBondLevels(
     (sum, level) => sum + level.coinReward,
     0,
   );
-  const events: GameplayEvent[] = newlyEarned.map((earned) => ({
+  const events: AchievementUnlockedEvent[] = newlyEarned.map((earned) => ({
     type: "achievement_unlocked",
     achievementKey: earned.key,
     coinsEarned: earned.coinReward,

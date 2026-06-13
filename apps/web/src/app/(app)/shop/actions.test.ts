@@ -1,17 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("@/lib/auth", () => ({ auth: vi.fn() }));
-vi.mock("@/services/shop", () => ({ buyPokemon: vi.fn() }));
+vi.mock("@/services/shop", () => ({ buyPokemon: vi.fn(), buyItem: vi.fn() }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-import { buyPokemon } from "@/services/shop";
+import { buyPokemon, buyItem } from "@/services/shop";
 import { InsufficientCoinsError, NotFoundError } from "@/services/errors";
-import { buyPokemonAction } from "./actions";
+import { buyPokemonAction, buyItemAction } from "./actions";
 
 const mockAuth = auth as ReturnType<typeof vi.fn>;
 const mockBuy = buyPokemon as ReturnType<typeof vi.fn>;
+const mockBuyItem = buyItem as ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -92,5 +93,47 @@ describe("buyPokemonAction()", () => {
         message: "Something went wrong",
       },
     });
+  });
+});
+
+describe("buyItemAction()", () => {
+  it("returns UNAUTHORIZED payload when session is missing", async () => {
+    mockAuth.mockResolvedValue(null);
+
+    const result = await buyItemAction("REVIVE");
+
+    expect(result).toEqual({
+      ok: false,
+      error: { type: "AUTH", code: "UNAUTHORIZED", message: "Unauthorized" },
+    });
+    expect(mockBuyItem).not.toHaveBeenCalled();
+  });
+
+  it("calls buyItem and revalidates layout on success", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+    mockBuyItem.mockResolvedValue(undefined);
+
+    const result = await buyItemAction("REVIVE");
+
+    expect(mockBuyItem).toHaveBeenCalledWith("user-1", "REVIVE");
+    expect(revalidatePath).toHaveBeenCalledWith("/", "layout");
+    expect(result).toEqual({ ok: true });
+  });
+
+  it("maps InsufficientCoinsError to SHOP/INSUFFICIENT_COINS payload", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+    mockBuyItem.mockRejectedValue(new InsufficientCoinsError());
+
+    const result = await buyItemAction("REVIVE");
+
+    expect(result).toEqual({
+      ok: false,
+      error: {
+        type: "SHOP",
+        code: "INSUFFICIENT_COINS",
+        message: "Insufficient coins",
+      },
+    });
+    expect(revalidatePath).not.toHaveBeenCalled();
   });
 });

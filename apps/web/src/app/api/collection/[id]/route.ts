@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { UnauthorizedError } from "@/services/errors";
-import { getUserPokemon } from "@/services/pokemon";
+import { getUserPokemonDto } from "@/services/user-pokemon";
 import { appErrorToResponse } from "@/lib/server-response";
 
 export async function GET(
@@ -13,7 +13,7 @@ export async function GET(
       throw new UnauthorizedError();
     }
     const { id } = await params;
-    const pokemon = await getUserPokemon(session.user.id, id);
+    const pokemon = await getUserPokemonDto(session.user.id, id);
     return Response.json(pokemon);
   } catch (err) {
     return appErrorToResponse(err);

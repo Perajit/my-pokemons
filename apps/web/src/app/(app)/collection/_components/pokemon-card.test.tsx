@@ -2,10 +2,10 @@
 
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import type { UserPokemonDTO } from "@/services/pokemon";
+import type { UserPokemonDto } from "@/services/user-pokemon";
 import { PokemonCard } from "./pokemon-card";
 
-function makePokemon(overrides: Partial<UserPokemonDTO> = {}): UserPokemonDTO {
+function makePokemon(overrides: Partial<UserPokemonDto> = {}): UserPokemonDto {
   return {
     id: "up-1",
     pokemon: { name: "Pikachu", pokeApiId: 25 },
@@ -18,9 +18,8 @@ function makePokemon(overrides: Partial<UserPokemonDTO> = {}): UserPokemonDTO {
     faintedAt: null,
     feedCooldownEndsAt: null,
     playCooldownEndsAt: null,
-    feedCoinReward: 3,
-    playCoinReward: 5,
-    earnedAchievements: [],
+
+    earnedBondLevels: [],
     ...overrides,
   };
 }

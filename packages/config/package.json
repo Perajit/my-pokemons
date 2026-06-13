@@ -5,7 +5,9 @@
   "exports": {
     "./eslint": "./eslint.mjs",
     "./tsconfig": "./tsconfig.base.json",
-    "./bond-levels": "./src/bond-levels.ts"
+    "./bond-levels": "./src/bond-levels.ts",
+    "./items": "./src/items.ts",
+    "./pokemons": "./src/pokemons.ts"
   },
   "scripts": {
     "test": "vitest run",

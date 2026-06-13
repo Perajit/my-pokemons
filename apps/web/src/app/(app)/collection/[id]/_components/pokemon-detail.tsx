@@ -6,11 +6,7 @@ import { useTransition } from "react";
 import useSWR from "swr";
 import { toast } from "sonner";
 import { Drumstick, Smile, Skull, Gamepad2, ChevronLeft } from "lucide-react";
-import {
-  BOND_LEVEL_LABELS,
-  type BondLevelKey,
-} from "@my-pokemons/config/bond-levels";
-import type { UserPokemonDTO } from "@/services/pokemon";
+import type { UserPokemonDto } from "@/services/user-pokemon";
 import { Card, CardContent } from "@/components/ui/card";
 import { apiFetcher } from "@/lib/client-fetcher";
 import { cn } from "@/lib/utils";
@@ -24,6 +20,7 @@ import { StatRow } from "./stat-row";
 import { ActionButton } from "./action-button";
 import { StreakHeader } from "./streak-header";
 import { BondLevelSteps } from "./bond-level-steps";
+import { notifyGameplayEvents } from "./gameplay-event-toasts";
 
 const POLL_INTERVAL_MS =
   parseInt(process.env.NEXT_PUBLIC_POLLING_INTERVAL_SECONDS ?? "300", 10) *
@@ -39,8 +36,8 @@ function spriteUrl(pokeApiId: number) {
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokeApiId}.png`;
 }
 
-export function PokemonDetail({ initial }: { initial: UserPokemonDTO }) {
-  const { data: pokemon = initial, mutate } = useSWR<UserPokemonDTO>(
+export function PokemonDetail({ initial }: { initial: UserPokemonDto }) {
+  const { data: pokemon = initial, mutate } = useSWR<UserPokemonDto>(
     `/api/collection/${initial.id}`,
     apiFetcher,
     {
@@ -61,16 +58,7 @@ export function PokemonDetail({ initial }: { initial: UserPokemonDTO }) {
     startFeedTransition(async () => {
       const result = await feedAction(pokemon.id);
       if (result.ok) {
-        toast.success(
-          `Fed ${pokemon.pokemon.name}! +${pokemon.feedCoinReward} coins`,
-        );
-        result.data.events.forEach((event) => {
-          if (event.type === "achievement_unlocked") {
-            toast.success(
-              `Earned: ${BOND_LEVEL_LABELS[event.achievementKey as BondLevelKey]} (+${event.coinsEarned} coins)`,
-            );
-          }
-        });
+        notifyGameplayEvents(result.data.events);
       } else {
         toast.error(result.error.message);
       }
@@ -82,16 +70,7 @@ export function PokemonDetail({ initial }: { initial: UserPokemonDTO }) {
     startPlayTransition(async () => {
       const result = await playAction(pokemon.id);
       if (result.ok) {
-        toast.success(
-          `Played with ${pokemon.pokemon.name}! +${pokemon.playCoinReward} coins`,
-        );
-        result.data.events.forEach((event) => {
-          if (event.type === "achievement_unlocked") {
-            toast.success(
-              `Earned: ${BOND_LEVEL_LABELS[event.achievementKey as BondLevelKey]} (+${event.coinsEarned} coins)`,
-            );
-          }
-        });
+        notifyGameplayEvents(result.data.events);
       } else {
         toast.error(result.error.message);
       }

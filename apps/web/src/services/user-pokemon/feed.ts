@@ -1,12 +1,12 @@
 import { applyFeed } from "@my-pokemons/core";
 import { db } from "@/lib/db";
+import { creditCoins } from "../user";
 import { FEED_COOLDOWN_SECONDS } from "./cooldowns";
 import {
   loadOwnedUserPokemonEntity,
-  syncDecayOrThrowIfFainted,
+  syncDecayAndAssertActive,
   assertNotOnCooldown,
   commitActionWithCooldownGuard,
-  creditCoinsToUser,
   recordAchievementRewards,
   buildPostActionUserPokemon,
 } from "./action-steps";
@@ -24,7 +24,7 @@ export async function feedPokemon(
       userPokemonId,
       userId,
     );
-    const decayedState = await syncDecayOrThrowIfFainted(
+    const decayedState = await syncDecayAndAssertActive(
       transaction,
       entity,
       now,
@@ -51,7 +51,7 @@ export async function feedPokemon(
       entity.id,
       bondLevelOutcome.newlyEarnedBondLevels,
     );
-    await creditCoinsToUser(
+    await creditCoins(
       transaction,
       userId,
       entity.pokemon.feedCoinReward + bondLevelOutcome.totalBondLevelCoins,
@@ -63,7 +63,14 @@ export async function feedPokemon(
         "lastFedAt",
         now,
       ),
-      events: bondLevelOutcome.events,
+      events: [
+        {
+          type: "pokemon_fed" as const,
+          pokemonName: entity.pokemon.name,
+          coinsEarned: entity.pokemon.feedCoinReward,
+        },
+        ...bondLevelOutcome.events,
+      ],
     };
   });
 }

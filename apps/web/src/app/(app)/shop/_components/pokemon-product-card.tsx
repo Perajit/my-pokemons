@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Coins } from "lucide-react";
+import type { ShopPokemonDto } from "@/services/shop";
 import { buyPokemonAction } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,23 +17,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-type ShopPokemon = {
-  id: string;
-  name: string;
-  pokeApiId: number;
-  description: string;
-  price: number;
-};
-
 function spriteUrl(pokeApiId: number) {
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokeApiId}.png`;
 }
 
-export function ShopCard({
+export function PokemonProductCard({
   pokemon,
   userCoins,
 }: {
-  pokemon: ShopPokemon;
+  pokemon: ShopPokemonDto;
   userCoins: number;
 }) {
   const [open, setOpen] = useState(false);
@@ -94,6 +87,12 @@ export function ShopCard({
           </div>
           <p className="font-heading text-base font-medium text-stone-700">
             {pokemon.name}
+          </p>
+          <p
+            aria-label={`You own ${pokemon.userOwnedCount}`}
+            className="-mt-1 text-xs text-stone-500 tabular-nums"
+          >
+            Owned &times;{pokemon.userOwnedCount}
           </p>
           <span
             aria-label={`Price: ${pokemon.price} coins`}

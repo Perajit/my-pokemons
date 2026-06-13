@@ -19,7 +19,7 @@ vi.mock("sonner", () => ({
 vi.mock("../actions", () => ({ buyPokemonAction: vi.fn() }));
 
 import { buyPokemonAction } from "../actions";
-import { ShopCard } from "./shop-card";
+import { PokemonProductCard } from "./pokemon-product-card";
 
 const mockAction = buyPokemonAction as Mock;
 
@@ -29,6 +29,7 @@ const pikachu = {
   pokeApiId: 25,
   description: "It keeps its tail raised.",
   price: 400,
+  userOwnedCount: 2,
 };
 
 beforeEach(() => {
@@ -44,16 +45,22 @@ function openDialogByKeyboard(key: string) {
   fireEvent.keyDown(screen.getByText("Pikachu"), { key });
 }
 
-describe("ShopCard", () => {
+describe("PokemonProductCard", () => {
   it("renders pokemon name and price on the card", () => {
-    render(<ShopCard pokemon={pikachu} userCoins={500} />);
+    render(<PokemonProductCard pokemon={pikachu} userCoins={500} />);
 
     expect(screen.getByText("Pikachu")).toBeInTheDocument();
     expect(screen.getByText(/400/)).toBeInTheDocument();
   });
 
+  it("renders the user's owned count on the card", () => {
+    render(<PokemonProductCard pokemon={pikachu} userCoins={500} />);
+
+    expect(screen.getByLabelText("You own 2")).toBeInTheDocument();
+  });
+
   it("opens dialog with description and balance when clicked", () => {
-    render(<ShopCard pokemon={pikachu} userCoins={500} />);
+    render(<PokemonProductCard pokemon={pikachu} userCoins={500} />);
     openDialog();
 
     expect(screen.getByText("It keeps its tail raised.")).toBeInTheDocument();
@@ -62,7 +69,7 @@ describe("ShopCard", () => {
   });
 
   it("calls action, closes dialog, and shows toast on success", async () => {
-    render(<ShopCard pokemon={pikachu} userCoins={500} />);
+    render(<PokemonProductCard pokemon={pikachu} userCoins={500} />);
     openDialog();
     fireEvent.click(screen.getByRole("button", { name: /^buy$/i }));
 
@@ -86,7 +93,7 @@ describe("ShopCard", () => {
         message: "Insufficient coins",
       },
     });
-    render(<ShopCard pokemon={pikachu} userCoins={500} />);
+    render(<PokemonProductCard pokemon={pikachu} userCoins={500} />);
     openDialog();
     fireEvent.click(screen.getByRole("button", { name: /^buy$/i }));
 
@@ -98,7 +105,7 @@ describe("ShopCard", () => {
 
   it("shows generic error when action throws unexpectedly", async () => {
     mockAction.mockRejectedValue(new Error("unexpected"));
-    render(<ShopCard pokemon={pikachu} userCoins={500} />);
+    render(<PokemonProductCard pokemon={pikachu} userCoins={500} />);
     openDialog();
     fireEvent.click(screen.getByRole("button", { name: /^buy$/i }));
 
@@ -110,21 +117,21 @@ describe("ShopCard", () => {
   });
 
   it("opens dialog when Enter is pressed on the card", () => {
-    render(<ShopCard pokemon={pikachu} userCoins={500} />);
+    render(<PokemonProductCard pokemon={pikachu} userCoins={500} />);
     openDialogByKeyboard("Enter");
 
     expect(screen.getByText("It keeps its tail raised.")).toBeInTheDocument();
   });
 
   it("opens dialog when Space is pressed on the card", () => {
-    render(<ShopCard pokemon={pikachu} userCoins={500} />);
+    render(<PokemonProductCard pokemon={pikachu} userCoins={500} />);
     openDialogByKeyboard(" ");
 
     expect(screen.getByText("It keeps its tail raised.")).toBeInTheDocument();
   });
 
   it("ignores other keys on the card", () => {
-    render(<ShopCard pokemon={pikachu} userCoins={500} />);
+    render(<PokemonProductCard pokemon={pikachu} userCoins={500} />);
     openDialogByKeyboard("a");
 
     expect(
@@ -133,7 +140,7 @@ describe("ShopCard", () => {
   });
 
   it("closes dialog and clears state when Cancel is clicked", () => {
-    render(<ShopCard pokemon={pikachu} userCoins={500} />);
+    render(<PokemonProductCard pokemon={pikachu} userCoins={500} />);
     openDialog();
 
     expect(screen.getByText("It keeps its tail raised.")).toBeInTheDocument();
@@ -145,7 +152,7 @@ describe("ShopCard", () => {
   });
 
   it("disables Buy and shows 'Not enough coins' hint when balance < price", () => {
-    render(<ShopCard pokemon={pikachu} userCoins={100} />);
+    render(<PokemonProductCard pokemon={pikachu} userCoins={100} />);
     openDialog();
 
     expect(screen.getByRole("button", { name: /^buy$/i })).toBeDisabled();
@@ -159,7 +166,7 @@ describe("ShopCard", () => {
         resolveAction = resolve;
       }),
     );
-    render(<ShopCard pokemon={pikachu} userCoins={500} />);
+    render(<PokemonProductCard pokemon={pikachu} userCoins={500} />);
     openDialog();
     fireEvent.click(screen.getByRole("button", { name: /^buy$/i }));
 

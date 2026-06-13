@@ -39,13 +39,13 @@ vi.mock("../../actions", () => ({
 
 import { toast } from "sonner";
 import { feedAction, playAction } from "../../actions";
-import type { UserPokemonDTO } from "@/services/pokemon";
+import type { UserPokemonDto } from "@/services/user-pokemon";
 import { PokemonDetail } from "./pokemon-detail";
 
 const mockFeed = feedAction as ReturnType<typeof vi.fn>;
 const mockPlay = playAction as ReturnType<typeof vi.fn>;
 
-function makePokemon(overrides: Partial<UserPokemonDTO> = {}): UserPokemonDTO {
+function makePokemon(overrides: Partial<UserPokemonDto> = {}): UserPokemonDto {
   return {
     id: "up-1",
     pokemon: { name: "Pikachu", pokeApiId: 25 },
@@ -58,8 +58,6 @@ function makePokemon(overrides: Partial<UserPokemonDTO> = {}): UserPokemonDTO {
     faintedAt: null,
     feedCooldownEndsAt: null,
     playCooldownEndsAt: null,
-    feedCoinReward: 3,
-    playCoinReward: 5,
     earnedBondLevels: [],
     ...overrides,
   };
@@ -176,9 +174,16 @@ describe("PokemonDetail", () => {
     });
   });
 
-  it("calls feedAction and toasts success on Feed click", async () => {
+  it("calls feedAction and toasts the pokemon_fed event on Feed click", async () => {
     const user = userEvent.setup();
-    mockFeed.mockResolvedValue({ ok: true, data: { events: [] } });
+    mockFeed.mockResolvedValue({
+      ok: true,
+      data: {
+        events: [
+          { type: "pokemon_fed", pokemonName: "Pikachu", coinsEarned: 3 },
+        ],
+      },
+    });
     render(<PokemonDetail initial={makePokemon()} />);
 
     await act(async () => {
@@ -189,9 +194,16 @@ describe("PokemonDetail", () => {
     expect(toast.success).toHaveBeenCalledWith("Fed Pikachu! +3 coins");
   });
 
-  it("calls playAction and toasts success on Play click", async () => {
+  it("calls playAction and toasts the pokemon_played event on Play click", async () => {
     const user = userEvent.setup();
-    mockPlay.mockResolvedValue({ ok: true, data: { events: [] } });
+    mockPlay.mockResolvedValue({
+      ok: true,
+      data: {
+        events: [
+          { type: "pokemon_played", pokemonName: "Pikachu", coinsEarned: 5 },
+        ],
+      },
+    });
     render(<PokemonDetail initial={makePokemon()} />);
 
     await act(async () => {
@@ -208,6 +220,7 @@ describe("PokemonDetail", () => {
       ok: true,
       data: {
         events: [
+          { type: "pokemon_played", pokemonName: "Pikachu", coinsEarned: 5 },
           {
             type: "achievement_unlocked",
             achievementKey: "BOND_LEVEL_7D",
@@ -234,6 +247,7 @@ describe("PokemonDetail", () => {
       ok: true,
       data: {
         events: [
+          { type: "pokemon_fed", pokemonName: "Pikachu", coinsEarned: 3 },
           {
             type: "achievement_unlocked",
             achievementKey: "BOND_LEVEL_1D",

@@ -4,14 +4,10 @@ import {
   cooldownEndsAt,
 } from "@my-pokemons/core";
 import type { UserPokemonEntity } from "@my-pokemons/database";
-import type { db } from "@/lib/db";
 import { NotOwnedError, FaintedError, CooldownError } from "../errors";
-import { toUserPokemon } from "./read";
+import type { PrismaTransaction } from "../transaction";
+import { toUserPokemon } from "./mappers";
 import type { UserPokemon, UserPokemonSnapshot } from "./types";
-
-export type PrismaTransaction = Parameters<
-  Parameters<(typeof db)["$transaction"]>[0]
->[0];
 
 export async function loadOwnedUserPokemonEntity(
   transaction: PrismaTransaction,
@@ -31,7 +27,7 @@ export async function loadOwnedUserPokemonEntity(
   return entity;
 }
 
-export async function syncDecayOrThrowIfFainted(
+export async function syncDecayAndAssertActive(
   transaction: PrismaTransaction,
   entity: UserPokemonEntity,
   now: Date,
@@ -115,20 +111,6 @@ export async function commitActionWithCooldownGuard(
   /* v8 ignore stop */
 }
 
-export async function creditCoinsToUser(
-  transaction: PrismaTransaction,
-  userId: string,
-  amount: number,
-): Promise<void> {
-  if (amount === 0) {
-    return;
-  }
-  await transaction.user.update({
-    where: { id: userId },
-    data: { coins: { increment: amount } },
-  });
-}
-
 // Records the "coins paid" ledger for newly-earned bond levels (dedup guard for
 // coin crediting). Displayed bond levels are derived from activeDays at read
 // time — nothing else to persist here.
@@ -156,7 +138,7 @@ export function buildPostActionUserPokemon(
   lastActionField: "lastFedAt" | "lastPlayedAt",
   now: Date,
 ): UserPokemon {
-  // faintedAt is null by invariant: syncDecayOrThrowIfFainted throws on any
+  // faintedAt is null by invariant: syncDecayAndAssertActive throws on any
   // fainted path, and no subsequent step in the feed/play flow writes faintedAt.
   const snapshot: UserPokemonSnapshot = {
     id: entity.id,

@@ -7,7 +7,7 @@ import {
   feedPokemon,
   playWithPokemon,
   type GameplayEvent,
-} from "@/services/pokemon";
+} from "@/services/user-pokemon";
 import { runAction, type ActionResult } from "@/lib/action-result";
 
 export async function feedAction(

@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import { getUserCollection, toUserPokemonDTO } from "@/services/pokemon";
+import { getUserCollectionDto } from "@/services/user-pokemon";
 import { CollectionGrid } from "./_components/collection-grid";
 
 export default async function CollectionPage() {
@@ -8,8 +8,7 @@ export default async function CollectionPage() {
     return null;
   }
 
-  const pokemons = await getUserCollection(session.user.id);
-  const initial = pokemons.map(toUserPokemonDTO);
+  const initial = await getUserCollectionDto(session.user.id);
 
   return <CollectionGrid initial={initial} />;
 }

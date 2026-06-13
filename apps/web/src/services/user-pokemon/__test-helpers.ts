@@ -1,5 +1,5 @@
 // Shared test fixture: the one piece used by more than one sibling test file
-// (serializers.test.ts and bond-levels.test.ts). Single-use builders live in
+// (mappers.test.ts and bond-levels.test.ts). Single-use builders live in
 // their own test file.
 export const basePokemon = {
   id: "poke-1",

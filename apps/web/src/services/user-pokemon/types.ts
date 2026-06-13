@@ -38,20 +38,35 @@ export type UserPokemon = {
   playCooldownEndsAt: Date | null;
 };
 
+export type PokemonFedEvent = {
+  type: "pokemon_fed";
+  pokemonName: string;
+  coinsEarned: number;
+};
+
+export type PokemonPlayedEvent = {
+  type: "pokemon_played";
+  pokemonName: string;
+  coinsEarned: number;
+};
+
 export type AchievementUnlockedEvent = {
   type: "achievement_unlocked";
   achievementKey: string;
   coinsEarned: number;
 };
 
-export type GameplayEvent = AchievementUnlockedEvent;
+export type GameplayEvent =
+  | PokemonFedEvent
+  | PokemonPlayedEvent
+  | AchievementUnlockedEvent;
 
 export type GameplayActionResult = {
   userPokemon: UserPokemon;
   events: GameplayEvent[];
 };
 
-export type UserPokemonDTO = {
+export type UserPokemonDto = {
   id: string;
   pokemon: { name: string; pokeApiId: number };
   currentFullness: number;
@@ -63,7 +78,5 @@ export type UserPokemonDTO = {
   faintedAt: string | null;
   feedCooldownEndsAt: string | null;
   playCooldownEndsAt: string | null;
-  feedCoinReward: number;
-  playCoinReward: number;
   earnedBondLevels: BondLevelKey[];
 };

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("@/lib/auth", () => ({ auth: vi.fn() }));
-vi.mock("@/services/pokemon", () => ({
+vi.mock("@/services/user-pokemon", () => ({
   feedPokemon: vi.fn(),
   playWithPokemon: vi.fn(),
 }));
@@ -9,7 +9,7 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-import { feedPokemon, playWithPokemon } from "@/services/pokemon";
+import { feedPokemon, playWithPokemon } from "@/services/user-pokemon";
 import { NotOwnedError, FaintedError, CooldownError } from "@/services/errors";
 import { feedAction, playAction } from "./actions";
 

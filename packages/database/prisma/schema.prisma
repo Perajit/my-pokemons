@@ -18,6 +18,28 @@ model User {
   coins        Int           @default(500)
   createdAt    DateTime      @default(now())
   userPokemons UserPokemon[]
+  userItems    UserItem[]
+}
+
+model Item {
+  id          String     @id @default(cuid())
+  key         String     @unique
+  name        String
+  description String
+  price       Int
+  userItems   UserItem[]
+}
+
+model UserItem {
+  id       String @id @default(cuid())
+  userId   String
+  itemId   String
+  quantity Int    @default(0)
+  user     User   @relation(fields: [userId], references: [id])
+  item     Item   @relation(fields: [itemId], references: [id])
+
+  @@unique([userId, itemId])
+  @@index([userId])
 }
 
 model Pokemon {

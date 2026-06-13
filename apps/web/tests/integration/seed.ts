@@ -1,3 +1,4 @@
+import { ITEM_CONFIG } from "@my-pokemons/config/items";
 import { db } from "@/lib/db";
 
 export const pikachuSeed = {
@@ -53,9 +54,21 @@ export function seedUserPokemon(
   });
 }
 
+const reviveSeed = ITEM_CONFIG.find((item) => item.key === "REVIVE")!;
+
+export function seedItem(overrides: Partial<typeof reviveSeed> = {}) {
+  return db.item.create({ data: { ...reviveSeed, ...overrides } });
+}
+
+export function seedUserItem(userId: string, itemId: string, quantity: number) {
+  return db.userItem.create({ data: { userId, itemId, quantity } });
+}
+
 export async function resetGameplayTables() {
   await db.userPokemonAchievement.deleteMany();
+  await db.userItem.deleteMany();
   await db.userPokemon.deleteMany();
+  await db.item.deleteMany();
   await db.pokemon.deleteMany();
   await db.user.deleteMany();
 }

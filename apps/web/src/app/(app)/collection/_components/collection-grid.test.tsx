@@ -12,10 +12,10 @@ vi.mock("swr", () => ({
   ) => ({ data: options.fallbackData }),
 }));
 
-import type { UserPokemonDTO } from "@/services/pokemon";
+import type { UserPokemonDto } from "@/services/user-pokemon";
 import { CollectionGrid } from "./collection-grid";
 
-function makePokemon(overrides: Partial<UserPokemonDTO> = {}): UserPokemonDTO {
+function makePokemon(overrides: Partial<UserPokemonDto> = {}): UserPokemonDto {
   return {
     id: "up-1",
     pokemon: { name: "Pikachu", pokeApiId: 25 },
@@ -28,9 +28,8 @@ function makePokemon(overrides: Partial<UserPokemonDTO> = {}): UserPokemonDTO {
     faintedAt: null,
     feedCooldownEndsAt: null,
     playCooldownEndsAt: null,
-    feedCoinReward: 3,
-    playCoinReward: 5,
-    earnedAchievements: [],
+
+    earnedBondLevels: [],
     ...overrides,
   };
 }

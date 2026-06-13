@@ -4,7 +4,7 @@ import { describe, it, expect, beforeEach, afterAll } from "vitest";
 
 import { db } from "@/lib/db";
 import { NotOwnedError, FaintedError, CooldownError } from "@/services/errors";
-import { playWithPokemon } from "@/services/pokemon";
+import { playWithPokemon } from "@/services/user-pokemon";
 import {
   seedUser,
   seedPokemon,
@@ -46,8 +46,13 @@ describe("playWithPokemon()", () => {
 
     const result = await playWithPokemon(user.id, up.id);
 
-    expect(result.events.map((e) => e.achievementKey)).toEqual([
-      "BOND_LEVEL_1D",
+    expect(result.events).toEqual([
+      { type: "pokemon_played", pokemonName: "Pikachu", coinsEarned: 5 },
+      {
+        type: "achievement_unlocked",
+        achievementKey: "BOND_LEVEL_1D",
+        coinsEarned: 5,
+      },
     ]);
     const achievements = await db.userPokemonAchievement.findMany({
       where: { userPokemonId: up.id },

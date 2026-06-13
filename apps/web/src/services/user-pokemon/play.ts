@@ -1,12 +1,12 @@
 import { applyPlay } from "@my-pokemons/core";
 import { db } from "@/lib/db";
+import { creditCoins } from "../user";
 import { PLAY_COOLDOWN_SECONDS } from "./cooldowns";
 import {
   loadOwnedUserPokemonEntity,
-  syncDecayOrThrowIfFainted,
+  syncDecayAndAssertActive,
   assertNotOnCooldown,
   commitActionWithCooldownGuard,
-  creditCoinsToUser,
   recordAchievementRewards,
   buildPostActionUserPokemon,
 } from "./action-steps";
@@ -24,7 +24,7 @@ export async function playWithPokemon(
       userPokemonId,
       userId,
     );
-    const decayedState = await syncDecayOrThrowIfFainted(
+    const decayedState = await syncDecayAndAssertActive(
       transaction,
       entity,
       now,
@@ -51,7 +51,7 @@ export async function playWithPokemon(
       entity.id,
       bondLevelOutcome.newlyEarnedBondLevels,
     );
-    await creditCoinsToUser(
+    await creditCoins(
       transaction,
       userId,
       entity.pokemon.playCoinReward + bondLevelOutcome.totalBondLevelCoins,
@@ -63,7 +63,14 @@ export async function playWithPokemon(
         "lastPlayedAt",
         now,
       ),
-      events: bondLevelOutcome.events,
+      events: [
+        {
+          type: "pokemon_played" as const,
+          pokemonName: entity.pokemon.name,
+          coinsEarned: entity.pokemon.playCoinReward,
+        },
+        ...bondLevelOutcome.events,
+      ],
     };
   });
 }

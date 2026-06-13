@@ -4,7 +4,12 @@ import { describe, it, expect, beforeEach, afterAll } from "vitest";
 
 import { db } from "@/lib/db";
 import { NotOwnedError } from "@/services/errors";
-import { getUserCollection, getUserPokemon } from "@/services/pokemon";
+import {
+  getUserCollection,
+  getUserPokemon,
+  getUserCollectionDto,
+  getUserPokemonDto,
+} from "@/services/user-pokemon";
 import {
   seedUser,
   seedPokemon,
@@ -148,5 +153,65 @@ describe("getUserPokemon()", () => {
     await expect(getUserPokemon(user.id, "nonexistent-id")).rejects.toThrow(
       NotOwnedError,
     );
+  });
+});
+
+// The DTO is the exact wire shape pages and the /api/collection routes return.
+// Asserting it here is what guards against the domain object leaking to the
+// client (feed/play coin rewards must be top-level, internal fields absent).
+describe("getUserPokemonDto()", () => {
+  it("returns the serialization-ready DTO shape", async () => {
+    const user = await seedUser(500);
+    const pokemon = await seedPokemon();
+    const up = await seedUserPokemon(user.id, pokemon.id);
+
+    const dto = await getUserPokemonDto(user.id, up.id);
+
+    // pokemon sub-object carries only display identity
+    expect(dto.pokemon).toEqual({
+      name: pokemon.name,
+      pokeApiId: pokemon.pokeApiId,
+    });
+    // dates are ISO strings
+    expect(typeof dto.acquiredAt).toBe("string");
+    // internal / now-unused fields never reach the wire
+    expect(dto).not.toHaveProperty("lastFedAt");
+    expect(dto).not.toHaveProperty("lastPlayedAt");
+    expect(dto).not.toHaveProperty("feedCoinReward");
+    expect(dto).not.toHaveProperty("playCoinReward");
+  });
+
+  it("throws NotOwnedError for a pokemon owned by someone else", async () => {
+    const owner = await seedUser(500);
+    const intruder = await seedUser(500);
+    const pokemon = await seedPokemon();
+    const up = await seedUserPokemon(owner.id, pokemon.id);
+
+    await expect(getUserPokemonDto(intruder.id, up.id)).rejects.toThrow(
+      NotOwnedError,
+    );
+  });
+});
+
+describe("getUserCollectionDto()", () => {
+  it("returns an array of serialization-ready DTOs", async () => {
+    const user = await seedUser(500);
+    const pokemon = await seedPokemon();
+    await seedUserPokemon(user.id, pokemon.id);
+
+    const collection = await getUserCollectionDto(user.id);
+
+    expect(collection).toHaveLength(1);
+    expect(collection[0].pokemon).toEqual({
+      name: pokemon.name,
+      pokeApiId: pokemon.pokeApiId,
+    });
+    expect(collection[0]).not.toHaveProperty("lastFedAt");
+    expect(collection[0]).not.toHaveProperty("feedCoinReward");
+  });
+
+  it("returns an empty array when the user owns nothing", async () => {
+    const user = await seedUser(500);
+    expect(await getUserCollectionDto(user.id)).toEqual([]);
   });
 });

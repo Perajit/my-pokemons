@@ -4,7 +4,7 @@ import { describe, it, expect, beforeEach, afterAll } from "vitest";
 
 import { db } from "@/lib/db";
 import { NotOwnedError, FaintedError, CooldownError } from "@/services/errors";
-import { feedPokemon } from "@/services/pokemon";
+import { feedPokemon } from "@/services/user-pokemon";
 import {
   seedUser,
   seedPokemon,
@@ -47,9 +47,18 @@ describe("feedPokemon()", () => {
 
     const result = await feedPokemon(user.id, up.id);
 
-    expect(result.events.map((e) => e.achievementKey)).toEqual([
-      "BOND_LEVEL_1D",
-      "BOND_LEVEL_7D",
+    expect(result.events).toEqual([
+      { type: "pokemon_fed", pokemonName: "Pikachu", coinsEarned: 3 },
+      {
+        type: "achievement_unlocked",
+        achievementKey: "BOND_LEVEL_1D",
+        coinsEarned: 5,
+      },
+      {
+        type: "achievement_unlocked",
+        achievementKey: "BOND_LEVEL_7D",
+        coinsEarned: 15,
+      },
     ]);
 
     // Durable facts: the achievement ledger (drives coin dedup) + the credited balance.
@@ -82,7 +91,10 @@ describe("feedPokemon()", () => {
 
     const result = await feedPokemon(user.id, up.id);
 
-    expect(result.events).toEqual([]);
+    // Only the action event remains; no new bond levels on the second feed.
+    expect(result.events).toEqual([
+      { type: "pokemon_fed", pokemonName: "Pikachu", coinsEarned: 3 },
+    ]);
     const achievementCount = await db.userPokemonAchievement.count({
       where: { userPokemonId: up.id },
     });
@@ -187,6 +199,6 @@ describe("feedPokemon()", () => {
     await feedPokemon(user.id, up.id);
 
     const persistedUser = await db.user.findUnique({ where: { id: user.id } });
-    expect(persistedUser!.coins).toBe(100); // creditCoinsToUser skips the write
+    expect(persistedUser!.coins).toBe(100); // creditCoins skips the write
   });
 });

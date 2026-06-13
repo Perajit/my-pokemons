@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Heart, Drumstick, Smile } from "lucide-react";
-import type { UserPokemonDTO } from "@/services/pokemon";
+import type { UserPokemonDto } from "@/services/user-pokemon";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { levelColor } from "./pokemon-levels";
@@ -10,7 +10,7 @@ function spriteUrl(pokeApiId: number) {
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokeApiId}.png`;
 }
 
-export function PokemonCard({ pokemon }: { pokemon: UserPokemonDTO }) {
+export function PokemonCard({ pokemon }: { pokemon: UserPokemonDto }) {
   const fullness = Math.round(pokemon.currentFullness);
   const mood = Math.round(pokemon.currentMood);
   const heart = Math.round(pokemon.heart);
