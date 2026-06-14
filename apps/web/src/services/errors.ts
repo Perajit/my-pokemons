@@ -116,3 +116,13 @@ export class InsufficientItemsError extends AppError {
     return 400;
   }
 }
+
+export class AlreadyClaimedError extends AppError {
+  constructor() {
+    super("GAMEPLAY", "ALREADY_CLAIMED", "Daily gift already claimed");
+    this.name = "AlreadyClaimedError";
+  }
+  get status() {
+    return 400;
+  }
+}

@@ -1,7 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("@/lib/auth", () => ({ auth: vi.fn() }));
-vi.mock("@/services/shop", () => ({ buyPokemon: vi.fn(), buyItem: vi.fn() }));
+vi.mock("@/services/shop", () => ({
+  buyPokemon: vi.fn(),
+  buyItem: vi.fn(),
+}));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 import { auth } from "@/lib/auth";

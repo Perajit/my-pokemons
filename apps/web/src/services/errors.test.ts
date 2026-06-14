@@ -7,6 +7,9 @@ import {
   CooldownError,
   NotFoundError,
   InsufficientCoinsError,
+  NotFaintedError,
+  InsufficientItemsError,
+  AlreadyClaimedError,
 } from "./errors";
 
 describe("AppError", () => {
@@ -132,6 +135,33 @@ describe("InsufficientCoinsError", () => {
     const err = new InsufficientCoinsError();
     expect(err.type).toBe("SHOP");
     expect(err.code).toBe("INSUFFICIENT_COINS");
+    expect(err.status).toBe(400);
+  });
+});
+
+describe("NotFaintedError", () => {
+  it("is GAMEPLAY/NOT_FAINTED with status 400", () => {
+    const err = new NotFaintedError();
+    expect(err.type).toBe("GAMEPLAY");
+    expect(err.code).toBe("NOT_FAINTED");
+    expect(err.status).toBe(400);
+  });
+});
+
+describe("InsufficientItemsError", () => {
+  it("is GAMEPLAY/INSUFFICIENT_ITEMS with status 400", () => {
+    const err = new InsufficientItemsError();
+    expect(err.type).toBe("GAMEPLAY");
+    expect(err.code).toBe("INSUFFICIENT_ITEMS");
+    expect(err.status).toBe(400);
+  });
+});
+
+describe("AlreadyClaimedError", () => {
+  it("is GAMEPLAY/ALREADY_CLAIMED with status 400", () => {
+    const err = new AlreadyClaimedError();
+    expect(err.type).toBe("GAMEPLAY");
+    expect(err.code).toBe("ALREADY_CLAIMED");
     expect(err.status).toBe(400);
   });
 });

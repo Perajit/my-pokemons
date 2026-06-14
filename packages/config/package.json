@@ -7,7 +7,8 @@
     "./tsconfig": "./tsconfig.base.json",
     "./bond-levels": "./src/bond-levels.ts",
     "./items": "./src/items.ts",
-    "./pokemons": "./src/pokemons.ts"
+    "./pokemons": "./src/pokemons.ts",
+    "./daily-gift": "./src/daily-gift.ts"
   },
   "scripts": {
     "test": "vitest run",

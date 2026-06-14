@@ -6,7 +6,9 @@ import { logoutAction } from "@/app/actions";
 import { Pokeball } from "@/components/pokeball";
 import { PokeballBackground } from "@/components/pokeball-background";
 import { Button } from "@/components/ui/button";
+import { getDailyGiftStatusDto } from "@/services/user";
 import { NavLinks } from "./_components/nav-links";
+import { DailyGiftButton } from "./_daily-gift/button";
 
 export default async function AppLayout({
   children,
@@ -14,12 +16,15 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   const session = await auth();
-  const user = session
-    ? await db.user.findUnique({
-        where: { id: session.user.id },
-        select: { name: true, email: true, coins: true },
-      })
-    : null;
+  const [user, dailyGiftStatus] = session
+    ? await Promise.all([
+        db.user.findUnique({
+          where: { id: session.user.id },
+          select: { name: true, email: true, coins: true },
+        }),
+        getDailyGiftStatusDto(session.user.id),
+      ])
+    : [null, null];
 
   return (
     <div className="relative min-h-svh overflow-hidden bg-gradient-to-br from-rose-100 via-orange-50 to-amber-100">
@@ -49,6 +54,7 @@ export default async function AppLayout({
                 <Coins className="size-4" aria-hidden />
                 <span className="relative top-px">{user?.coins ?? 0}</span>
               </span>
+              {dailyGiftStatus && <DailyGiftButton status={dailyGiftStatus} />}
               <form action={logoutAction} className="shrink-0">
                 <Button type="submit" variant="outline" size="sm">
                   Logout

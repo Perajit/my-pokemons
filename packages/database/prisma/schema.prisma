@@ -15,10 +15,11 @@ model User {
   email        String        @unique
   name         String?
   passwordHash String
-  coins        Int           @default(500)
-  createdAt    DateTime      @default(now())
-  userPokemons UserPokemon[]
-  userItems    UserItem[]
+  coins                  Int           @default(500)
+  lastDailyGiftClaimedAt DateTime?
+  createdAt              DateTime      @default(now())
+  userPokemons           UserPokemon[]
+  userItems              UserItem[]
 }
 
 model Item {
