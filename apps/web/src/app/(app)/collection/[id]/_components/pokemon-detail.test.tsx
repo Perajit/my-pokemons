@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, act } from "@testing-library/react";
+import { render, screen, act, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import * as React from "react";
 
@@ -40,10 +40,16 @@ vi.mock("../../actions", () => ({
   feedAction: vi.fn(),
   playAction: vi.fn(),
   reviveAction: vi.fn(),
+  renameAction: vi.fn(),
 }));
 
 import { toast } from "sonner";
-import { feedAction, playAction, reviveAction } from "../../actions";
+import {
+  feedAction,
+  playAction,
+  reviveAction,
+  renameAction,
+} from "../../actions";
 import type { UserPokemonDto } from "@/services/user-pokemon";
 import { PokemonDetail } from "./pokemon-detail";
 
@@ -54,6 +60,7 @@ const mockRevive = reviveAction as ReturnType<typeof vi.fn>;
 function makePokemon(overrides: Partial<UserPokemonDto> = {}): UserPokemonDto {
   return {
     id: "up-1",
+    nickname: "Pikachu",
     pokemon: { name: "Pikachu", pokeApiId: 25 },
     currentFullness: 80,
     currentMood: 70,
@@ -76,11 +83,51 @@ beforeEach(() => {
 describe("PokemonDetail", () => {
   it("renders name, days since acquired, and stat bars when active", () => {
     render(<PokemonDetail initial={makePokemon()} />);
-    expect(screen.getByText("Pikachu")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Pikachu" }),
+    ).toBeInTheDocument();
     expect(screen.getByText(/5 days streak/i)).toBeInTheDocument();
     expect(screen.getByLabelText("Heart: 76 of 100")).toBeInTheDocument();
     expect(screen.getByLabelText("Fullness: 80 of 100")).toBeInTheDocument();
     expect(screen.getByLabelText("Mood: 70 of 100")).toBeInTheDocument();
+  });
+
+  it("shows the nickname as the title with a rename button", () => {
+    render(<PokemonDetail initial={makePokemon({ nickname: "Sparky" })} />);
+    expect(screen.getByRole("heading", { name: "Sparky" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /rename sparky/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("renames through the pencil dialog on success", async () => {
+    const user = userEvent.setup();
+    (renameAction as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: true });
+    render(<PokemonDetail initial={makePokemon({ nickname: "Pikachu" })} />);
+
+    await user.click(screen.getByRole("button", { name: /rename pikachu/i }));
+    const input = await screen.findByLabelText(/nickname/i);
+    await user.clear(input);
+    await user.type(input, "Sparky");
+    await user.click(screen.getByRole("button", { name: /save/i }));
+
+    await waitFor(() =>
+      expect(renameAction).toHaveBeenCalledWith("up-1", "Sparky"),
+    );
+  });
+
+  it("always shows the species name as a subtitle under the nickname", () => {
+    const { rerender } = render(
+      <PokemonDetail initial={makePokemon({ nickname: "Sparky" })} />,
+    );
+    // renamed → nickname title + species subtitle
+    expect(screen.getByRole("heading", { name: "Sparky" })).toBeInTheDocument();
+    expect(screen.getByText("Pikachu")).toBeInTheDocument();
+
+    // un-renamed (nickname === species) → species still shown, so it appears
+    // twice: once as the title, once as the subtitle
+    rerender(<PokemonDetail initial={makePokemon({ nickname: "Pikachu" })} />);
+    expect(screen.getAllByText("Pikachu")).toHaveLength(2);
   });
 
   it("renders a Back to Collection link pointing at /collection", () => {

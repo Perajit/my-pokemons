@@ -62,6 +62,7 @@ model UserPokemon {
   id               String             @id @default(cuid())
   userId           String
   pokemonId        String
+  nickname         String?
   currentFullness  Float              @default(60)
   currentMood      Float              @default(60)
   faintedAt        DateTime?

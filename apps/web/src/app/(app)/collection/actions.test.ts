@@ -5,6 +5,7 @@ vi.mock("@/services/user-pokemon", () => ({
   feedPokemon: vi.fn(),
   playWithPokemon: vi.fn(),
   revivePokemon: vi.fn(),
+  renamePokemon: vi.fn(),
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
@@ -14,6 +15,7 @@ import {
   feedPokemon,
   playWithPokemon,
   revivePokemon,
+  renamePokemon,
 } from "@/services/user-pokemon";
 import {
   NotOwnedError,
@@ -22,12 +24,13 @@ import {
   NotFaintedError,
   InsufficientItemsError,
 } from "@/services/errors";
-import { feedAction, playAction, reviveAction } from "./actions";
+import { feedAction, playAction, reviveAction, renameAction } from "./actions";
 
 const mockAuth = auth as ReturnType<typeof vi.fn>;
 const mockFeed = feedPokemon as ReturnType<typeof vi.fn>;
 const mockPlay = playWithPokemon as ReturnType<typeof vi.fn>;
 const mockRevive = revivePokemon as ReturnType<typeof vi.fn>;
+const mockRename = renamePokemon as ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -235,6 +238,64 @@ describe("reviveAction()", () => {
         type: "GAMEPLAY",
         code: "INSUFFICIENT_ITEMS",
         message: "You don't have that item",
+      },
+    });
+  });
+});
+
+describe("renameAction()", () => {
+  it("returns UNAUTHORIZED payload when session is missing", async () => {
+    mockAuth.mockResolvedValue(null);
+
+    const result = await renameAction("up-1", "Sparky");
+
+    expect(result).toEqual({
+      ok: false,
+      error: { type: "AUTH", code: "UNAUTHORIZED", message: "Unauthorized" },
+    });
+    expect(mockRename).not.toHaveBeenCalled();
+  });
+
+  it("returns a VALIDATION payload and skips the rename for a blank nickname", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+
+    const result = await renameAction("up-1", "   ");
+
+    expect(result).toEqual({
+      ok: false,
+      error: {
+        type: "VALIDATION",
+        code: "INVALID_NICKNAME",
+        message: "Nickname is required",
+      },
+    });
+    expect(mockRename).not.toHaveBeenCalled();
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("renames with a trimmed nickname and revalidates layout on success", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+    mockRename.mockResolvedValue(undefined);
+
+    const result = await renameAction("up-1", "  Sparky  ");
+
+    expect(mockRename).toHaveBeenCalledWith("user-1", "up-1", "Sparky");
+    expect(revalidatePath).toHaveBeenCalledWith("/", "layout");
+    expect(result).toEqual({ ok: true });
+  });
+
+  it("returns SYSTEM/UNKNOWN payload for unexpected throws", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+    mockRename.mockRejectedValue(new Error("DB exploded"));
+
+    const result = await renameAction("up-1", "Sparky");
+
+    expect(result).toEqual({
+      ok: false,
+      error: {
+        type: "SYSTEM",
+        code: "UNKNOWN",
+        message: "Something went wrong",
       },
     });
   });

@@ -10,6 +10,7 @@ function makeEntity(overrides = {}) {
     id: "up-1",
     userId: "user-1",
     pokemonId: "poke-1",
+    nickname: null,
     currentFullness: 60,
     currentMood: 60,
     faintedAt: null,

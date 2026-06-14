@@ -14,6 +14,9 @@ export async function runAction<T>(
     if (err instanceof AppError) {
       return { ok: false, error: err.toNetworkObject() };
     }
+    // Unexpected (non-AppError) failure — log the real cause so the generic
+    // "Something went wrong" returned to the client stays diagnosable.
+    console.error("Unhandled action error:", err);
     return {
       ok: false,
       error: new AppError(

@@ -225,7 +225,7 @@ Can be changed to env vars later if per-environment tuning is needed.
 - [x] Daily gift — free daily gift box in shop; weighted random coins or Revive item; resets at UTC midnight
 - [x] Achievements — streak tracking, coin rewards, `packages/config` + `packages/core`
 - [x] Account management — account menu with initials avatar; settings page to edit display name
-- [ ] Nickname — `UserPokemon.nickname`, defaults to species name at acquire; rename UI on detail page
+- [x] Nickname — per-Pokémon nickname (defaults to species at acquire); rename on the detail page; used on the card and in gameplay toasts
 
 ## Dev Workflow
 

@@ -44,6 +44,7 @@ export async function revivePokemon(
 
     const snapshot: UserPokemonSnapshot = {
       id: entity.id,
+      nickname: entity.nickname,
       currentFullness: REVIVE_RESTORE_VALUE,
       currentMood: REVIVE_RESTORE_VALUE,
       acquiredAt: entity.acquiredAt,
@@ -62,7 +63,12 @@ export async function revivePokemon(
 
     return {
       userPokemon: toUserPokemon(snapshot, now),
-      events: [{ type: "pokemon_revived", pokemonName: entity.pokemon.name }],
+      events: [
+        {
+          type: "pokemon_revived",
+          pokemonName: entity.nickname ?? entity.pokemon.name,
+        },
+      ],
     };
   });
 }

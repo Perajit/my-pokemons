@@ -142,6 +142,7 @@ export function buildPostActionUserPokemon(
   // fainted path, and no subsequent step in the feed/play flow writes faintedAt.
   const snapshot: UserPokemonSnapshot = {
     id: entity.id,
+    nickname: entity.nickname,
     currentFullness: updatedStats.currentFullness,
     currentMood: updatedStats.currentMood,
     acquiredAt: entity.acquiredAt,

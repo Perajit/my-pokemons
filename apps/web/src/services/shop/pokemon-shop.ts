@@ -53,6 +53,8 @@ export async function buyPokemon(
 
   await db.$transaction(async (transaction) => {
     await spendCoins(transaction, userId, pokemon.price);
-    await transaction.userPokemon.create({ data: { userId, pokemonId } });
+    await transaction.userPokemon.create({
+      data: { userId, pokemonId, nickname: pokemon.name },
+    });
   });
 }

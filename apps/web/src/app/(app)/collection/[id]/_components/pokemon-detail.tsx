@@ -23,6 +23,7 @@ import { StreakHeader } from "./streak-header";
 import { BondLevelSteps } from "./bond-level-steps";
 import { ReviveButton } from "./revive-button";
 import { notifyGameplayEvents } from "./gameplay-event-toasts";
+import { RenamePokemonDialog } from "./rename-pokemon-dialog";
 
 const POLL_INTERVAL_MS =
   parseInt(process.env.NEXT_PUBLIC_POLLING_INTERVAL_SECONDS ?? "300", 10) *
@@ -125,9 +126,19 @@ export function PokemonDetail({
             />
           </div>
           <div className="space-y-1">
-            <h1 className="font-heading text-3xl font-semibold text-amber-800">
+            <div className="flex items-center justify-center gap-2">
+              <h1 className="font-heading text-3xl font-semibold text-amber-800">
+                {pokemon.nickname}
+              </h1>
+              <RenamePokemonDialog
+                userPokemonId={pokemon.id}
+                nickname={pokemon.nickname}
+                onRenamed={() => mutate()}
+              />
+            </div>
+            <p className="text-sm font-medium text-stone-400">
               {pokemon.pokemon.name}
-            </h1>
+            </p>
             <p className="text-sm text-stone-500">
               Since {dateFormatter.format(acquiredAt)}
             </p>

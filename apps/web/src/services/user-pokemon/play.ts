@@ -66,7 +66,7 @@ export async function playWithPokemon(
       events: [
         {
           type: "pokemon_played" as const,
-          pokemonName: entity.pokemon.name,
+          pokemonName: entity.nickname ?? entity.pokemon.name,
           coinsEarned: entity.pokemon.playCoinReward,
         },
         ...bondLevelOutcome.events,

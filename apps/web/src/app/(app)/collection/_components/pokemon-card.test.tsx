@@ -8,6 +8,7 @@ import { PokemonCard } from "./pokemon-card";
 function makePokemon(overrides: Partial<UserPokemonDto> = {}): UserPokemonDto {
   return {
     id: "up-1",
+    nickname: "Pikachu",
     pokemon: { name: "Pikachu", pokeApiId: 25 },
     currentFullness: 60,
     currentMood: 60,
@@ -25,9 +26,12 @@ function makePokemon(overrides: Partial<UserPokemonDto> = {}): UserPokemonDto {
 }
 
 describe("PokemonCard", () => {
-  it("shows the pokemon name", () => {
-    render(<PokemonCard pokemon={makePokemon()} />);
-    expect(screen.getByText("Pikachu")).toBeInTheDocument();
+  it("shows the nickname as the card name", () => {
+    render(<PokemonCard pokemon={makePokemon({ nickname: "Sparky" })} />);
+    expect(screen.getByText("Sparky")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /open sparky/i }),
+    ).toBeInTheDocument();
   });
 
   it("renders heart, fullness, and mood stats when active", () => {

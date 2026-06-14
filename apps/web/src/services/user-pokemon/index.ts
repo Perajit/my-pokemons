@@ -16,3 +16,4 @@ export {
 export { feedPokemon } from "./feed";
 export { playWithPokemon } from "./play";
 export { revivePokemon } from "./revive";
+export { renamePokemon } from "./rename";

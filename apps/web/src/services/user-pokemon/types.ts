@@ -2,6 +2,7 @@ import type { BondLevelKey } from "@my-pokemons/config/bond-levels";
 
 export type UserPokemonSnapshot = {
   id: string;
+  nickname: string | null;
   currentFullness: number;
   currentMood: number;
   acquiredAt: Date;
@@ -20,6 +21,7 @@ export type UserPokemonSnapshot = {
 
 export type UserPokemon = {
   id: string;
+  nickname: string;
   currentFullness: number;
   currentMood: number;
   acquiredAt: Date;
@@ -76,6 +78,7 @@ export type GameplayActionResult = {
 
 export type UserPokemonDto = {
   id: string;
+  nickname: string;
   pokemon: { name: string; pokeApiId: number };
   currentFullness: number;
   currentMood: number;

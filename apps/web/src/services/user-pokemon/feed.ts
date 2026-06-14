@@ -66,7 +66,7 @@ export async function feedPokemon(
       events: [
         {
           type: "pokemon_fed" as const,
-          pokemonName: entity.pokemon.name,
+          pokemonName: entity.nickname ?? entity.pokemon.name,
           coinsEarned: entity.pokemon.feedCoinReward,
         },
         ...bondLevelOutcome.events,

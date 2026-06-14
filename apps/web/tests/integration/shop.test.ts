@@ -55,6 +55,7 @@ describe("buyPokemon()", () => {
     const owned = await db.userPokemon.findMany({ where: { userId: user.id } });
     expect(owned).toHaveLength(1);
     expect(owned[0].pokemonId).toBe(pokemon.id);
+    expect(owned[0].nickname).toBe(pokemon.name);
     expect(owned[0].currentFullness).toBe(60);
     expect(owned[0].currentMood).toBe(60);
     expect(owned[0].faintedAt).toBeNull();

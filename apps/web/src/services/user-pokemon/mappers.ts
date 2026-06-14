@@ -27,6 +27,7 @@ export function toUserPokemon(
   );
   return {
     id: snapshot.id,
+    nickname: snapshot.nickname ?? snapshot.pokemon.name,
     currentFullness: snapshot.currentFullness,
     currentMood: snapshot.currentMood,
     acquiredAt: snapshot.acquiredAt,
@@ -53,6 +54,7 @@ export function toUserPokemon(
 export function toUserPokemonDto(userPokemon: UserPokemon): UserPokemonDto {
   return {
     id: userPokemon.id,
+    nickname: userPokemon.nickname,
     pokemon: {
       name: userPokemon.pokemon.name,
       pokeApiId: userPokemon.pokemon.pokeApiId,

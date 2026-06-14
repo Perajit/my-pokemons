@@ -19,7 +19,7 @@ export function PokemonCard({ pokemon }: { pokemon: UserPokemonDto }) {
     <Link
       href={`/collection/${pokemon.id}`}
       className="block rounded-2xl focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:outline-none"
-      aria-label={`Open ${pokemon.pokemon.name}`}
+      aria-label={`Open ${pokemon.nickname}`}
     >
       <Card className="group cursor-pointer rounded-2xl border-stone-200/70 bg-white shadow-sm transition-all hover:shadow-md motion-safe:hover:-translate-y-0.5">
         <CardContent className="px-5 py-3.5 sm:p-4">
@@ -37,7 +37,7 @@ export function PokemonCard({ pokemon }: { pokemon: UserPokemonDto }) {
             <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5 sm:flex-none sm:items-center sm:gap-2">
               <div className="flex flex-col items-start gap-1 sm:items-center">
                 <p className="font-heading text-base font-medium text-stone-700">
-                  {pokemon.pokemon.name}
+                  {pokemon.nickname}
                 </p>
                 {pokemon.isFainted ? (
                   <span className="rounded-full bg-stone-100 px-2.5 py-1 text-sm font-medium text-stone-500">

@@ -18,6 +18,7 @@ import { CollectionGrid } from "./collection-grid";
 function makePokemon(overrides: Partial<UserPokemonDto> = {}): UserPokemonDto {
   return {
     id: "up-1",
+    nickname: "Pikachu",
     pokemon: { name: "Pikachu", pokeApiId: 25 },
     currentFullness: 60,
     currentMood: 60,
@@ -50,10 +51,12 @@ describe("CollectionGrid", () => {
         initial={[
           makePokemon({
             id: "up-1",
+            nickname: "Pikachu",
             pokemon: { name: "Pikachu", pokeApiId: 25 },
           }),
           makePokemon({
             id: "up-2",
+            nickname: "Bulbasaur",
             pokemon: { name: "Bulbasaur", pokeApiId: 1 },
           }),
         ]}
