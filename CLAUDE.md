@@ -224,8 +224,8 @@ Can be changed to env vars later if per-environment tuning is needed.
   - [x] Revive — spend a Revive to wake a fainted Pokémon at 50% HP; streak resets, bond preserved
 - [x] Daily gift — free daily gift box in shop; weighted random coins or Revive item; resets at UTC midnight
 - [x] Achievements — streak tracking, coin rewards, `packages/config` + `packages/core`
+- [x] Account management — account menu with initials avatar; settings page to edit display name
 - [ ] Nickname — `UserPokemon.nickname`, defaults to species name at acquire; rename UI on detail page
-- [ ] Account management — avatar, profile settings, account menu
 
 ## Dev Workflow
 

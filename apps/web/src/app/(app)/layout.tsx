@@ -2,13 +2,12 @@ import Link from "next/link";
 import { Coins } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { logoutAction } from "@/app/actions";
 import { Pokeball } from "@/components/pokeball";
 import { PokeballBackground } from "@/components/pokeball-background";
-import { Button } from "@/components/ui/button";
 import { getDailyGiftStatusDto } from "@/services/user";
 import { NavLinks } from "./_components/nav-links";
 import { DailyGiftButton } from "./_daily-gift/button";
+import { UserMenu } from "./_user-menu/menu";
 
 export default async function AppLayout({
   children,
@@ -42,11 +41,6 @@ export default async function AppLayout({
               <NavLinks className="hidden sm:flex" />
             </div>
             <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-              {user && (
-                <span className="hidden min-w-0 max-w-[10rem] truncate text-sm text-stone-600 sm:inline">
-                  {user.name ?? user.email}
-                </span>
-              )}
               <span
                 aria-label={`Coin balance: ${user?.coins ?? 0}`}
                 className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1.5 text-base font-bold leading-none tabular-nums text-amber-800 ring-2 ring-amber-300 ring-inset"
@@ -55,11 +49,9 @@ export default async function AppLayout({
                 <span className="relative top-px">{user?.coins ?? 0}</span>
               </span>
               {dailyGiftStatus && <DailyGiftButton status={dailyGiftStatus} />}
-              <form action={logoutAction} className="shrink-0">
-                <Button type="submit" variant="outline" size="sm">
-                  Logout
-                </Button>
-              </form>
+              {user && (
+                <UserMenu user={{ name: user.name, email: user.email }} />
+              )}
             </div>
           </div>
           <div className="border-t border-stone-200/70 py-2 sm:hidden">

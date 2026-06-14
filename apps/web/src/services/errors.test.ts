@@ -10,6 +10,7 @@ import {
   NotFaintedError,
   InsufficientItemsError,
   AlreadyClaimedError,
+  ValidationError,
 } from "./errors";
 
 describe("AppError", () => {
@@ -163,5 +164,19 @@ describe("AlreadyClaimedError", () => {
     expect(err.type).toBe("GAMEPLAY");
     expect(err.code).toBe("ALREADY_CLAIMED");
     expect(err.status).toBe(400);
+  });
+});
+
+describe("ValidationError", () => {
+  it("is VALIDATION/400 and carries the given message and code", () => {
+    const err = new ValidationError("Name is required", "INVALID_NAME");
+    expect(err.type).toBe("VALIDATION");
+    expect(err.code).toBe("INVALID_NAME");
+    expect(err.message).toBe("Name is required");
+    expect(err.status).toBe(400);
+  });
+
+  it("defaults the code to INVALID_INPUT", () => {
+    expect(new ValidationError("Bad input").code).toBe("INVALID_INPUT");
   });
 });

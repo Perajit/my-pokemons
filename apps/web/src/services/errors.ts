@@ -1,4 +1,4 @@
-export type ErrorType = "AUTH" | "GAMEPLAY" | "SHOP" | "SYSTEM";
+export type ErrorType = "AUTH" | "GAMEPLAY" | "SHOP" | "VALIDATION" | "SYSTEM";
 
 export type AppErrorPayload = {
   type: ErrorType;
@@ -121,6 +121,16 @@ export class AlreadyClaimedError extends AppError {
   constructor() {
     super("GAMEPLAY", "ALREADY_CLAIMED", "Daily gift already claimed");
     this.name = "AlreadyClaimedError";
+  }
+  get status() {
+    return 400;
+  }
+}
+
+export class ValidationError extends AppError {
+  constructor(message: string, code = "INVALID_INPUT") {
+    super("VALIDATION", code, message);
+    this.name = "ValidationError";
   }
   get status() {
     return 400;

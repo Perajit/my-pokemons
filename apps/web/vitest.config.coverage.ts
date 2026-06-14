@@ -23,6 +23,7 @@ export default defineConfig({
         "src/app/\\(app\\)/page.tsx",
         "src/app/\\(app\\)/collection/page.tsx",
         "src/app/\\(app\\)/shop/page.tsx",
+        "src/app/\\(app\\)/settings/page.tsx",
         "src/app/\\(app\\)/collection/\\[id\\]/page.tsx",
         "src/app/\\(auth\\)/layout.tsx",
       ],
