@@ -1,4 +1,4 @@
-import type { Prisma } from "./generated/client";
+import type { Prisma } from "@prisma/client";
 
 export type UserPokemonEntity = Prisma.UserPokemonGetPayload<{
   include: {

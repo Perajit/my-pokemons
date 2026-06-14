@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["@prisma/client", "@my-pokemons/database"],
+  serverExternalPackages: ["@prisma/client"],
   images: {
     remotePatterns: [
       {

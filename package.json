@@ -9,6 +9,7 @@
     "lint": "turbo lint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "postinstall": "pnpm --filter @my-pokemons/database db:generate",
     "prepare": "husky"
   },
   "devDependencies": {
