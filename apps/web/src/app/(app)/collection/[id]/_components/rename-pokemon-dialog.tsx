@@ -61,7 +61,7 @@ export function RenamePokemonDialog({
           setValue(nickname);
           setOpen(true);
         }}
-        className="inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+        className="inline-flex size-7 shrink-0 cursor-pointer items-end justify-center rounded-full text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
       >
         <Pencil className="size-4" aria-hidden />
       </button>

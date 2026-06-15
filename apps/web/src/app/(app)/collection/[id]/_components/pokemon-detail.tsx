@@ -126,15 +126,19 @@ export function PokemonDetail({
             />
           </div>
           <div className="space-y-1">
-            <div className="flex items-center justify-center gap-2">
-              <h1 className="font-heading text-3xl font-semibold text-amber-800">
-                {pokemon.nickname}
-              </h1>
-              <RenamePokemonDialog
-                userPokemonId={pokemon.id}
-                nickname={pokemon.nickname}
-                onRenamed={() => mutate()}
-              />
+            <div className="flex justify-center">
+              <div className="relative flex items-center">
+                <h1 className="font-heading text-3xl font-semibold text-amber-800">
+                  {pokemon.nickname}
+                </h1>
+                <div className="absolute left-full pl-2">
+                  <RenamePokemonDialog
+                    userPokemonId={pokemon.id}
+                    nickname={pokemon.nickname}
+                    onRenamed={() => mutate()}
+                  />
+                </div>
+              </div>
             </div>
             <p className="text-sm font-medium text-stone-400">
               {pokemon.pokemon.name}
