@@ -82,7 +82,7 @@ export function BondLevelSteps({ earned }: { earned: BondLevelKey[] }) {
               <span
                 className={cn(
                   "text-xs leading-tight font-medium",
-                  isEarned ? "text-stone-700" : "text-stone-400",
+                  isEarned ? "text-stone-700" : "text-stone-300",
                 )}
               >
                 {label}
@@ -90,7 +90,7 @@ export function BondLevelSteps({ earned }: { earned: BondLevelKey[] }) {
               <span
                 className={cn(
                   "text-[10px] leading-tight",
-                  isEarned ? "text-stone-400" : "text-stone-300",
+                  isEarned ? "text-stone-600" : "text-stone-300",
                 )}
               >
                 {level.days}d

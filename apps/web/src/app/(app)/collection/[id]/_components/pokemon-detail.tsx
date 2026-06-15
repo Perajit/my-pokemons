@@ -1,29 +1,25 @@
 "use client";
 
+import { HeartStatus } from "@/app/(app)/collection/_components/heart-status";
+import { Card, CardContent } from "@/components/ui/card";
+import { apiFetcher } from "@/lib/client-fetcher";
+import { cn } from "@/lib/utils";
+import type { UserPokemonDto } from "@/services/user-pokemon";
+import { ChevronLeft, Drumstick, Gamepad2, Skull } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import useSWR from "swr";
 import { toast } from "sonner";
-import { Drumstick, Smile, Skull, Gamepad2, ChevronLeft } from "lucide-react";
-import type { UserPokemonDto } from "@/services/user-pokemon";
-import { Card, CardContent } from "@/components/ui/card";
-import { apiFetcher } from "@/lib/client-fetcher";
-import { cn } from "@/lib/utils";
-import { HeartStat } from "@/app/(app)/collection/_components/heart-stat";
-import {
-  fullnessLabel,
-  moodLabel,
-} from "@/app/(app)/collection/_components/pokemon-levels";
+import useSWR from "swr";
 import { feedAction, playAction, reviveAction } from "../../actions";
-import { StatRow } from "./stat-row";
 import { ActionButton } from "./action-button";
-import { StreakHeader } from "./streak-header";
+import { ActiveSteak } from "./active-streak";
 import { BondLevelSteps } from "./bond-level-steps";
-import { ReviveButton } from "./revive-button";
 import { notifyGameplayEvents } from "./gameplay-event-toasts";
 import { RenamePokemonDialog } from "./rename-pokemon-dialog";
+import { ReviveButton } from "./revive-button";
+import { StatusBlock } from "./status-block";
 
 const POLL_INTERVAL_MS =
   parseInt(process.env.NEXT_PUBLIC_POLLING_INTERVAL_SECONDS ?? "300", 10) *
@@ -112,7 +108,7 @@ export function PokemonDetail({
         Back to Collection
       </Link>
       <Card className="overflow-hidden rounded-2xl border-stone-200/70 bg-gradient-to-b from-white to-stone-50 shadow-sm">
-        <CardContent className="flex flex-col items-center gap-5 p-6 text-center sm:p-8">
+        <CardContent className="flex flex-col items-center gap-6 px-6 py-4 text-center sm:px-8 sm:py-6">
           <div className="flex size-44 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-amber-100/80 to-transparent sm:size-52">
             <Image
               src={spriteUrl(pokemon.pokemon.pokeApiId)}
@@ -128,7 +124,7 @@ export function PokemonDetail({
           <div className="space-y-1">
             <div className="flex justify-center">
               <div className="relative flex items-center">
-                <h1 className="font-heading text-3xl font-semibold text-amber-800">
+                <h1 className="font-heading text-3xl font-semibold text-stone-800">
                   {pokemon.nickname}
                 </h1>
                 <div className="absolute left-full pl-2">
@@ -146,43 +142,39 @@ export function PokemonDetail({
             <p className="text-sm text-stone-500">
               Since {dateFormatter.format(acquiredAt)}
             </p>
-            <StreakHeader activeStreak={pokemon.activeStreak} />
           </div>
-          <BondLevelSteps earned={pokemon.earnedBondLevels} />
-
           {!pokemon.isFainted ? (
             <>
+              <div className="space-y-1">
+                <ActiveSteak activeStreak={pokemon.activeStreak} />
+                <HeartStatus value={pokemon.heart} />
+              </div>
               <div className="flex w-full flex-col gap-3">
-                <div className="flex justify-center">
-                  <HeartStat value={pokemon.heart} size="lg" />
-                </div>
-                <StatRow
+                <StatusBlock
                   label="Fullness"
                   value={fullness}
-                  tier={fullnessLabel(fullness)}
-                  Icon={Drumstick}
+                  action={
+                    <ActionButton
+                      label="Feed"
+                      Icon={Drumstick}
+                      cooldownEndsAt={pokemon.feedCooldownEndsAt}
+                      isPending={feedPending}
+                      onClick={handleFeed}
+                    />
+                  }
                 />
-                <StatRow
+                <StatusBlock
                   label="Mood"
                   value={mood}
-                  tier={moodLabel(mood)}
-                  Icon={Smile}
-                />
-              </div>
-              <div className="grid w-full grid-cols-2 gap-3">
-                <ActionButton
-                  label="Feed"
-                  Icon={Drumstick}
-                  cooldownEndsAt={pokemon.feedCooldownEndsAt}
-                  isPending={feedPending}
-                  onClick={handleFeed}
-                />
-                <ActionButton
-                  label="Play"
-                  Icon={Gamepad2}
-                  cooldownEndsAt={pokemon.playCooldownEndsAt}
-                  isPending={playPending}
-                  onClick={handlePlay}
+                  action={
+                    <ActionButton
+                      label="Play"
+                      Icon={Gamepad2}
+                      cooldownEndsAt={pokemon.playCooldownEndsAt}
+                      isPending={playPending}
+                      onClick={handlePlay}
+                    />
+                  }
                 />
               </div>
             </>
@@ -199,6 +191,7 @@ export function PokemonDetail({
               />
             </div>
           )}
+          <BondLevelSteps earned={pokemon.earnedBondLevels} />
         </CardContent>
       </Card>
     </div>

@@ -1,21 +1,21 @@
 // @vitest-environment jsdom
-import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { StreakHeader } from "./streak-header";
+import { describe, expect, it } from "vitest";
+import { ActiveSteak } from "./active-streak";
 
-describe("StreakHeader", () => {
+describe("ActiveSteak", () => {
   it("pluralizes the streak label for multiple days", () => {
-    render(<StreakHeader activeStreak={7} />);
+    render(<ActiveSteak activeStreak={7} />);
     expect(screen.getByText(/7 days streak/i)).toBeInTheDocument();
   });
 
   it("renders 0 days streak for a freshly acquired pokemon", () => {
-    render(<StreakHeader activeStreak={0} />);
+    render(<ActiveSteak activeStreak={0} />);
     expect(screen.getByText(/0 days streak/i)).toBeInTheDocument();
   });
 
   it("uses the singular label at exactly 1 day", () => {
-    render(<StreakHeader activeStreak={1} />);
+    render(<ActiveSteak activeStreak={1} />);
     expect(screen.getByText(/^1 day streak$/i)).toBeInTheDocument();
   });
 });

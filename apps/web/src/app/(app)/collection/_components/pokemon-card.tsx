@@ -1,10 +1,10 @@
-import Image from "next/image";
-import Link from "next/link";
-import { Heart, Drumstick, Smile } from "lucide-react";
-import type { UserPokemonDto } from "@/services/user-pokemon";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { levelColor } from "./pokemon-levels";
+import type { UserPokemonDto } from "@/services/user-pokemon";
+import { Drumstick, Heart, Smile } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { getStatusLevelColorClassnames } from "./status-levels";
 
 function spriteUrl(pokeApiId: number) {
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokeApiId}.png`;
@@ -55,7 +55,10 @@ export function PokemonCard({ pokemon }: { pokemon: UserPokemonDto }) {
                   className="inline-flex items-center gap-1 text-sm text-stone-700"
                 >
                   <Heart
-                    className={cn("size-4 fill-current", levelColor(heart))}
+                    className={cn(
+                      "size-4 fill-current",
+                      getStatusLevelColorClassnames(heart).text,
+                    )}
                     aria-hidden
                   />
                   <span className="tabular-nums">{heart}</span>
@@ -65,7 +68,10 @@ export function PokemonCard({ pokemon }: { pokemon: UserPokemonDto }) {
                   className="inline-flex items-center gap-1 text-sm text-stone-700"
                 >
                   <Drumstick
-                    className={cn("size-4", levelColor(fullness))}
+                    className={cn(
+                      "size-4",
+                      getStatusLevelColorClassnames(fullness).text,
+                    )}
                     aria-hidden
                   />
                   <span className="tabular-nums">{fullness}</span>
@@ -75,7 +81,10 @@ export function PokemonCard({ pokemon }: { pokemon: UserPokemonDto }) {
                   className="inline-flex items-center gap-1 text-sm text-stone-700"
                 >
                   <Smile
-                    className={cn("size-4", levelColor(mood))}
+                    className={cn(
+                      "size-4",
+                      getStatusLevelColorClassnames(mood).text,
+                    )}
                     aria-hidden
                   />
                   <span className="tabular-nums">{mood}</span>
