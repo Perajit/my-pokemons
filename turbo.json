@@ -4,8 +4,9 @@
   "tasks": {
     "db:generate": {},
     "db:push": { "cache": false },
+    "db:seed": { "dependsOn": ["db:generate", "db:push"], "cache": false },
     "build": {
-      "dependsOn": ["^build", "^db:generate", "^db:push"],
+      "dependsOn": ["^build", "^db:generate", "^db:push", "^db:seed"],
       "env": [
         "AUTH_SECRET",
         "FEED_COOLDOWN_SECONDS",
