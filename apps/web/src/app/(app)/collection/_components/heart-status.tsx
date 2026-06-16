@@ -1,10 +1,10 @@
 import { cn } from "@/lib/utils";
 import { Heart } from "lucide-react";
-import { getStatusLevelColorClassnames } from "./status-levels";
+import { getStatusLevelColor } from "./status-levels";
 
 type Size = "sm" | "md";
 
-const SIZES: Record<Size, { container: string; icon: string }> = {
+const SIZE_STYLES: Record<Size, { container: string; icon: string }> = {
   sm: {
     container: "text-md h-6",
     icon: "size-3.5",
@@ -23,18 +23,18 @@ export function HeartStatus({
   size?: Size;
 }) {
   const rounded = Math.round(value);
-  const color = getStatusLevelColorClassnames(rounded).text;
-  const { container, icon } = SIZES[size];
+  const color = getStatusLevelColor(rounded).text;
+  const style = SIZE_STYLES[size];
 
   return (
     <span
       className={cn(
         "inline-flex items-center gap-1.5 text-stone-600 font-semibold",
-        container,
+        style.container,
       )}
       aria-label={`Heart: ${rounded} of 100`}
     >
-      <Heart className={cn("fill-current", icon, color)} aria-hidden />
+      <Heart className={cn("fill-current", style.icon, color)} aria-hidden />
       <span className="tabular-nums">{rounded} / 100</span>
     </span>
   );

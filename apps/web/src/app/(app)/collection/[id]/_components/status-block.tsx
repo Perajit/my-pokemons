@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { getStatusLevelColorClassnames } from "../../_components/status-levels";
+import { getStatusLevelColor } from "../../_components/status-levels";
 
 export function StatusBlock({
   label,
@@ -11,7 +11,7 @@ export function StatusBlock({
   action: React.ReactNode;
 }) {
   const rounded = Math.round(value);
-  const color = getStatusLevelColorClassnames(value).bg;
+  const color = getStatusLevelColor(value).bg;
 
   return (
     <div

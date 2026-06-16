@@ -6,7 +6,7 @@ function spriteUrl(pokeApiId: number) {
 
 type SpriteVariant = "card" | "feature";
 
-const VARIANTS: Record<
+const VARIANT_STYLES: Record<
   SpriteVariant,
   { container: string; image: string; intrinsic: number }
 > = {
@@ -33,15 +33,16 @@ export function PokemonSprite({
   name: string;
   variant: SpriteVariant;
 }) {
-  const { container, image, intrinsic } = VARIANTS[variant];
+  const style = VARIANT_STYLES[variant];
+
   return (
-    <div className={container}>
+    <div className={style.container}>
       <Image
         src={spriteUrl(pokeApiId)}
         alt={name}
-        width={intrinsic}
-        height={intrinsic}
-        className={image}
+        width={style.intrinsic}
+        height={style.intrinsic}
+        className={style.image}
       />
     </div>
   );

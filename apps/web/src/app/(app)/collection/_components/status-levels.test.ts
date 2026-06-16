@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { getStatusLevelColorClassnames } from "./status-levels";
+import { getStatusLevelColor } from "./status-levels";
 
-describe("getLevelColorClassnames()", () => {
+describe("getStatusLevelColor()", () => {
   it.each([
     [0, { text: "text-rose-600", bg: "bg-rose-500" }],
     [20, { text: "text-rose-600", bg: "bg-rose-500" }],
@@ -10,6 +10,6 @@ describe("getLevelColorClassnames()", () => {
     [51, { text: "text-emerald-600", bg: "bg-emerald-500" }],
     [100, { text: "text-emerald-600", bg: "bg-emerald-500" }],
   ])("returns %s for value %i", (value, expected) => {
-    expect(getStatusLevelColorClassnames(value)).toEqual(expected);
+    expect(getStatusLevelColor(value)).toEqual(expected);
   });
 });

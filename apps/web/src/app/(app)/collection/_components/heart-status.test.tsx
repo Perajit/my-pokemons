@@ -3,7 +3,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { HeartStatus } from "./heart-status";
-import { getStatusLevelColorClassnames } from "./status-levels";
+import { getStatusLevelColor } from "./status-levels";
 
 describe("HeartStat", () => {
   it("renders the rounded value", () => {
@@ -22,7 +22,7 @@ describe("HeartStat", () => {
       const { container, unmount } = render(<HeartStatus value={value} />);
       const icon = container.querySelector("svg");
       expect(icon?.getAttribute("class")).toContain(
-        getStatusLevelColorClassnames(value).text,
+        getStatusLevelColor(value).text,
       );
       unmount();
     },
