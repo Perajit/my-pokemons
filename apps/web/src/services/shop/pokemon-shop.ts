@@ -11,6 +11,12 @@ export type ShopPokemonDto = {
   description: string;
   price: number;
   userOwnedCount: number; // how many of this species the user owns (0 if none)
+  feedFullnessGain: number;
+  feedCoinReward: number;
+  playMoodGain: number;
+  playCoinReward: number;
+  fullnessDecayPerHour: number;
+  moodDecayPerHour: number;
 };
 
 type ShopPokemonEntity = Prisma.PokemonGetPayload<{
@@ -26,6 +32,12 @@ function toShopPokemonDto(pokemon: ShopPokemonEntity): ShopPokemonDto {
     description: pokemon.description,
     price: pokemon.price,
     userOwnedCount: pokemon.userPokemons.length,
+    feedFullnessGain: pokemon.feedFullnessGain,
+    feedCoinReward: pokemon.feedCoinReward,
+    playMoodGain: pokemon.playMoodGain,
+    playCoinReward: pokemon.playCoinReward,
+    fullnessDecayPerHour: pokemon.fullnessDecayPerHour,
+    moodDecayPerHour: pokemon.moodDecayPerHour,
   };
 }
 

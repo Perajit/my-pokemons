@@ -30,6 +30,12 @@ const pikachu = {
   description: "It keeps its tail raised.",
   price: 400,
   userOwnedCount: 2,
+  feedFullnessGain: 15,
+  feedCoinReward: 3,
+  playMoodGain: 28,
+  playCoinReward: 5,
+  fullnessDecayPerHour: 3,
+  moodDecayPerHour: 6,
 };
 
 beforeEach(() => {
@@ -57,6 +63,18 @@ describe("PokemonCard", () => {
     render(<PokemonCard pokemon={pikachu} userCoins={500} />);
 
     expect(screen.getByLabelText("You own 2")).toBeInTheDocument();
+  });
+
+  it("shows feed, play, and decay stats in the dialog", () => {
+    render(<PokemonCard pokemon={pikachu} userCoins={500} />);
+    openDialog();
+
+    expect(screen.getByText("+15 fullness")).toBeInTheDocument();
+    expect(screen.getByText("+3 coins")).toBeInTheDocument();
+    expect(screen.getByText("+28 mood")).toBeInTheDocument();
+    expect(screen.getByText("+5 coins")).toBeInTheDocument();
+    expect(screen.getByText("−3/hr")).toBeInTheDocument();
+    expect(screen.getByText("−6/hr")).toBeInTheDocument();
   });
 
   it("opens dialog with description and balance when clicked", () => {

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Coins } from "lucide-react";
+import { CoinBadge } from "@/components/coin-badge";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { Pokeball } from "@/components/pokeball";
@@ -41,13 +41,7 @@ export default async function AppLayout({
               <NavLinks className="hidden sm:flex" />
             </div>
             <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-              <span
-                aria-label={`Coin balance: ${user?.coins ?? 0}`}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1.5 text-base font-bold leading-none tabular-nums text-amber-800 ring-2 ring-amber-300 ring-inset"
-              >
-                <Coins className="size-4" aria-hidden />
-                <span className="relative top-px">{user?.coins ?? 0}</span>
-              </span>
+              <CoinBadge value={user?.coins ?? 0} label="Coin balance" />
               {dailyGiftStatus && <DailyGiftButton status={dailyGiftStatus} />}
               {user && (
                 <UserMenu user={{ name: user.name, email: user.email }} />

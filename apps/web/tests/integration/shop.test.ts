@@ -162,6 +162,12 @@ describe("getShopPokemonsDto()", () => {
       description: pokemon.description,
       price: 400,
       userOwnedCount: 0,
+      feedFullnessGain: 15,
+      feedCoinReward: 3,
+      playMoodGain: 28,
+      playCoinReward: 5,
+      fullnessDecayPerHour: 3,
+      moodDecayPerHour: 6,
     });
 
     await seedUserPokemon(user.id, pokemon.id);

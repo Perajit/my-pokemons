@@ -11,8 +11,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { CoinBadge } from "@/components/coin-badge";
 import type { ShopPokemonDto } from "@/services/shop";
-import { Coins } from "lucide-react";
+import { Coins, Cookie, Hand, TrendingDown } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { buyPokemonAction } from "../actions";
@@ -86,13 +87,7 @@ export function PokemonCard({
           >
             Owned &times;{pokemon.userOwnedCount}
           </span>
-          <span
-            aria-label={`Price: ${pokemon.price} coins`}
-            className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-sm font-semibold leading-none tabular-nums text-amber-800 ring-2 ring-amber-300 ring-inset"
-          >
-            <Coins className="size-3.5" aria-hidden />
-            <span className="relative top-px">{pokemon.price}</span>
-          </span>
+          <CoinBadge value={pokemon.price} label="Price" size="sm" />
         </CardContent>
       </Card>
       <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -111,6 +106,50 @@ export function PokemonCard({
               name={pokemon.name}
               variant="feature"
             />
+            <div className="grid w-full grid-cols-2 gap-2">
+              <div className="flex flex-col gap-1 rounded-xl bg-stone-50 px-3 py-2 ring-1 ring-stone-200 ring-inset">
+                <span className="flex items-center gap-1 text-xs text-stone-500">
+                  <Cookie className="size-3" aria-hidden />
+                  Feed
+                </span>
+                <span className="text-xs font-medium text-stone-700">
+                  +{Math.round(pokemon.feedFullnessGain)} fullness
+                </span>
+                <span className="text-xs text-stone-500">
+                  +{pokemon.feedCoinReward} coins
+                </span>
+              </div>
+              <div className="flex flex-col gap-1 rounded-xl bg-stone-50 px-3 py-2 ring-1 ring-stone-200 ring-inset">
+                <span className="flex items-center gap-1 text-xs text-stone-500">
+                  <Hand className="size-3" aria-hidden />
+                  Play
+                </span>
+                <span className="text-xs font-medium text-stone-700">
+                  +{Math.round(pokemon.playMoodGain)} mood
+                </span>
+                <span className="text-xs text-stone-500">
+                  +{pokemon.playCoinReward} coins
+                </span>
+              </div>
+              <div className="flex flex-col gap-1 rounded-xl bg-stone-50 px-3 py-2 ring-1 ring-stone-200 ring-inset">
+                <span className="flex items-center gap-1 text-xs text-stone-500">
+                  <TrendingDown className="size-3" aria-hidden />
+                  Fullness decay
+                </span>
+                <span className="text-xs font-medium text-stone-700">
+                  −{pokemon.fullnessDecayPerHour}/hr
+                </span>
+              </div>
+              <div className="flex flex-col gap-1 rounded-xl bg-stone-50 px-3 py-2 ring-1 ring-stone-200 ring-inset">
+                <span className="flex items-center gap-1 text-xs text-stone-500">
+                  <TrendingDown className="size-3" aria-hidden />
+                  Mood decay
+                </span>
+                <span className="text-xs font-medium text-stone-700">
+                  −{pokemon.moodDecayPerHour}/hr
+                </span>
+              </div>
+            </div>
             <div className="grid w-full grid-cols-2 gap-2">
               <div className="flex flex-col items-center gap-1 rounded-xl bg-stone-50 px-3 py-2 ring-1 ring-stone-200 ring-inset">
                 <span className="text-xs text-stone-500">Price</span>
