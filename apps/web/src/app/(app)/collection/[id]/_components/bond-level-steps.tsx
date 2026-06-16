@@ -19,7 +19,7 @@ const BOND_LEVEL_VISUALS: Record<
   BondLevelKey,
   { Icon: LucideIcon; color: string }
 > = {
-  BOND_LEVEL_1D: { Icon: Sprout, color: "text-emerald-500" },
+  BOND_LEVEL_0D: { Icon: Sprout, color: "text-emerald-500" },
   BOND_LEVEL_7D: { Icon: PawPrint, color: "text-sky-500" },
   BOND_LEVEL_30D: { Icon: HeartHandshake, color: "text-purple-500" },
   BOND_LEVEL_90D: { Icon: ShieldCheck, color: "text-amber-500" },
@@ -64,10 +64,10 @@ export function BondLevelSteps({ earned }: { earned: BondLevelKey[] }) {
             )}
             <span
               className={cn(
-                "relative z-10 flex size-10 shrink-0 items-center justify-center rounded-full border transition-colors",
+                "relative z-10 flex size-10 shrink-0 items-center justify-center rounded-full border border-2 transition-colors",
                 isEarned
-                  ? "border-stone-200 bg-white shadow-sm"
-                  : "border-dashed border-stone-300 bg-stone-50",
+                  ? "border-stone-400/50 bg-white"
+                  : "border-stone-300/50 bg-stone-50",
               )}
             >
               <Icon
@@ -82,18 +82,18 @@ export function BondLevelSteps({ earned }: { earned: BondLevelKey[] }) {
               <span
                 className={cn(
                   "text-xs leading-tight font-medium",
-                  isEarned ? "text-stone-700" : "text-stone-300",
+                  isEarned ? "text-stone-600" : "text-stone-400",
                 )}
               >
                 {label}
               </span>
               <span
                 className={cn(
-                  "text-[10px] leading-tight",
-                  isEarned ? "text-stone-600" : "text-stone-300",
+                  "text-[12px] leading-tight",
+                  isEarned ? "text-stone-600" : "text-stone-400",
                 )}
               >
-                {level.days}d
+                {level.days === 0 ? "New" : `${level.days}d`}
               </span>
             </span>
           </li>

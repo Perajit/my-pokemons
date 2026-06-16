@@ -38,54 +38,59 @@ function withAcquiredDaysAgo(days: number, earnedKeys: BondLevelKey[] = []) {
 }
 
 describe("evaluateBondLevels()", () => {
-  it("returns no events when active days is below 1", () => {
+  it("emits no paid event at day 0 — the welcome badge is display-only", () => {
     const result = evaluateBondLevels(withAcquiredDaysAgo(0), fixedNow);
     expect(result.events).toEqual([]);
     expect(result.totalBondLevelCoins).toBe(0);
     expect(result.newlyEarnedBondLevels).toEqual([]);
   });
 
-  it("emits BOND_LEVEL_1D event at exactly 1 day with 5 coins", () => {
-    const result = evaluateBondLevels(withAcquiredDaysAgo(1), fixedNow);
+  it("emits no paid event before the first time-based threshold", () => {
+    const result = evaluateBondLevels(withAcquiredDaysAgo(6), fixedNow);
+    expect(result.events).toEqual([]);
+    expect(result.totalBondLevelCoins).toBe(0);
+  });
+
+  it("emits BOND_LEVEL_7D event at exactly 7 days with 15 coins", () => {
+    const result = evaluateBondLevels(withAcquiredDaysAgo(7), fixedNow);
     expect(result.events).toEqual([
       {
         type: "achievement_unlocked",
-        achievementKey: "BOND_LEVEL_1D",
-        coinsEarned: 5,
+        achievementKey: "BOND_LEVEL_7D",
+        coinsEarned: 15,
       },
-    ]);
-    expect(result.totalBondLevelCoins).toBe(5);
-  });
-
-  it("emits BOND_LEVEL_1D and BOND_LEVEL_7D at 8 days when none completed", () => {
-    const result = evaluateBondLevels(withAcquiredDaysAgo(8), fixedNow);
-    expect(result.events.map((e) => e.achievementKey)).toEqual([
-      "BOND_LEVEL_1D",
-      "BOND_LEVEL_7D",
-    ]);
-    expect(result.totalBondLevelCoins).toBe(20);
-  });
-
-  it("skips already-earned bond levels", () => {
-    const result = evaluateBondLevels(
-      withAcquiredDaysAgo(7, ["BOND_LEVEL_1D"]),
-      fixedNow,
-    );
-    expect(result.events.map((e) => e.achievementKey)).toEqual([
-      "BOND_LEVEL_7D",
     ]);
     expect(result.totalBondLevelCoins).toBe(15);
   });
 
-  it("emits all five bond levels at 365 days when none completed", () => {
+  it("emits BOND_LEVEL_7D and BOND_LEVEL_30D at 30 days when none completed", () => {
+    const result = evaluateBondLevels(withAcquiredDaysAgo(30), fixedNow);
+    expect(result.events.map((e) => e.achievementKey)).toEqual([
+      "BOND_LEVEL_7D",
+      "BOND_LEVEL_30D",
+    ]);
+    expect(result.totalBondLevelCoins).toBe(55);
+  });
+
+  it("skips already-earned bond levels", () => {
+    const result = evaluateBondLevels(
+      withAcquiredDaysAgo(30, ["BOND_LEVEL_7D"]),
+      fixedNow,
+    );
+    expect(result.events.map((e) => e.achievementKey)).toEqual([
+      "BOND_LEVEL_30D",
+    ]);
+    expect(result.totalBondLevelCoins).toBe(40);
+  });
+
+  it("emits the four paid bond levels at 365 days when none completed", () => {
     const result = evaluateBondLevels(withAcquiredDaysAgo(365), fixedNow);
     expect(result.events.map((e) => e.achievementKey)).toEqual([
-      "BOND_LEVEL_1D",
       "BOND_LEVEL_7D",
       "BOND_LEVEL_30D",
       "BOND_LEVEL_90D",
       "BOND_LEVEL_365D",
     ]);
-    expect(result.totalBondLevelCoins).toBe(5 + 15 + 40 + 100 + 300);
+    expect(result.totalBondLevelCoins).toBe(15 + 40 + 100 + 300);
   });
 });

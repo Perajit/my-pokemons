@@ -34,20 +34,10 @@ describe("PokemonCard", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders heart, fullness, and mood stats when active", () => {
-    render(
-      <PokemonCard
-        pokemon={makePokemon({
-          heart: 75,
-          currentFullness: 80,
-          currentMood: 70,
-        })}
-      />,
-    );
+  it("renders heart stat when active", () => {
+    render(<PokemonCard pokemon={makePokemon({ heart: 75 })} />);
     expect(screen.getByLabelText("Heart: 75 of 100")).toBeInTheDocument();
-    expect(screen.getByLabelText("Fullness: 80")).toBeInTheDocument();
-    expect(screen.getByLabelText("Mood: 70")).toBeInTheDocument();
-    expect(screen.getByText("Active")).toBeInTheDocument();
+    expect(screen.queryByText("Fainted")).not.toBeInTheDocument();
   });
 
   it("links to the detail page", () => {
@@ -56,29 +46,17 @@ describe("PokemonCard", () => {
     expect(link).toHaveAttribute("href", "/collection/up-42");
   });
 
-  it("shows Fainted chip and still renders all stats at 0 when not active", () => {
+  it("shows Fainted badge and hides heart stat when fainted", () => {
     render(
       <PokemonCard
         pokemon={makePokemon({
           isFainted: true,
           faintedAt: "2024-06-01T00:00:00Z",
           heart: 0,
-          currentFullness: 0,
-          currentMood: 0,
         })}
       />,
     );
     expect(screen.getByText("Fainted")).toBeInTheDocument();
-    expect(screen.getByLabelText("Heart: 0 of 100")).toBeInTheDocument();
-    expect(screen.getByLabelText("Fullness: 0")).toBeInTheDocument();
-    expect(screen.getByLabelText("Mood: 0")).toBeInTheDocument();
-  });
-
-  it("desaturates the sprite when fainted", () => {
-    const { container } = render(
-      <PokemonCard pokemon={makePokemon({ isFainted: true })} />,
-    );
-    const img = container.querySelector("img");
-    expect(img?.className).toContain("grayscale");
+    expect(screen.queryByLabelText(/Heart:/)).not.toBeInTheDocument();
   });
 });

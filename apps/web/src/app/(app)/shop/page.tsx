@@ -1,8 +1,8 @@
 import { auth } from "@/lib/auth";
-import { getShopPokemonsDto, getShopItemsDto } from "@/services/shop";
+import { getShopItemsDto, getShopPokemonsDto } from "@/services/shop";
 import { getUserCoins } from "@/services/user";
-import { PokemonProductCard } from "./_components/pokemon-product-card";
-import { ItemProductCard } from "./_components/item-product-card";
+import { ItemCard } from "./_components/item-card";
+import { PokemonCard } from "./_components/pokemon-card";
 
 export default async function ShopPage() {
   const session = await auth();
@@ -29,7 +29,7 @@ export default async function ShopPage() {
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
           {pokemons.map((pokemon) => (
-            <PokemonProductCard
+            <PokemonCard
               key={pokemon.id}
               pokemon={pokemon}
               userCoins={userCoins}
@@ -50,11 +50,7 @@ export default async function ShopPage() {
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
             {items.map((item) => (
-              <ItemProductCard
-                key={item.id}
-                item={item}
-                userCoins={userCoins}
-              />
+              <ItemCard key={item.id} item={item} userCoins={userCoins} />
             ))}
           </div>
         </section>

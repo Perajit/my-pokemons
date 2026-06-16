@@ -70,9 +70,9 @@ describe("getUserCollection()", () => {
     expect(result[0].currentMood).toBe(0);
     // Active streak resets to 0 while fainted. Bond progress, however, freezes
     // at the real death time (50h after acquire = 2 alive days, the later
-    // zero-crossing) — not at read time 60h later — so the 1d badge stays.
+    // zero-crossing) — not at read time 60h later — so the welcome badge stays.
     expect(result[0].activeStreak).toBe(0);
-    expect(result[0].earnedBondLevels).toEqual(["BOND_LEVEL_1D"]);
+    expect(result[0].earnedBondLevels).toEqual(["BOND_LEVEL_0D"]);
 
     const persisted = await db.userPokemon.findUnique({ where: { id: up.id } });
     expect(persisted!.faintedAt!.getTime()).toBe(
@@ -107,10 +107,10 @@ describe("getUserCollection()", () => {
 
     const result = await getUserCollection(user.id);
 
-    // No feed/play has happened, yet the 1d and 7d achievements show (display
-    // can't lag the streak).
+    // No feed/play has happened, yet the welcome badge and 7d achievement show
+    // (display can't lag the streak).
     expect(result[0].earnedBondLevels).toEqual([
-      "BOND_LEVEL_1D",
+      "BOND_LEVEL_0D",
       "BOND_LEVEL_7D",
     ]);
   });

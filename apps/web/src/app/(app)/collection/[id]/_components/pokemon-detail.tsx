@@ -1,12 +1,12 @@
 "use client";
 
+import { FaintedBadge } from "@/app/(app)/collection/_components/fainted-badge";
 import { HeartStatus } from "@/app/(app)/collection/_components/heart-status";
+import { PokemonSprite } from "@/components/pokemon-sprite";
 import { Card, CardContent } from "@/components/ui/card";
 import { apiFetcher } from "@/lib/client-fetcher";
-import { cn } from "@/lib/utils";
 import type { UserPokemonDto } from "@/services/user-pokemon";
-import { ChevronLeft, Drumstick, Gamepad2, Skull } from "lucide-react";
-import Image from "next/image";
+import { ChevronLeft, Cookie, Hand } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
@@ -30,10 +30,6 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
   year: "numeric",
 });
-
-function spriteUrl(pokeApiId: number) {
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokeApiId}.png`;
-}
 
 export function PokemonDetail({
   initial,
@@ -109,25 +105,18 @@ export function PokemonDetail({
       </Link>
       <Card className="overflow-hidden rounded-2xl border-stone-200/70 bg-gradient-to-b from-white to-stone-50 shadow-sm">
         <CardContent className="flex flex-col items-center gap-6 px-6 py-4 text-center sm:px-8 sm:py-6">
-          <div className="flex size-44 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-amber-100/80 to-transparent sm:size-52">
-            <Image
-              src={spriteUrl(pokemon.pokemon.pokeApiId)}
-              alt={pokemon.pokemon.name}
-              width={208}
-              height={208}
-              className={cn(
-                "size-36 drop-shadow-md sm:size-44",
-                pokemon.isFainted && "opacity-50 grayscale",
-              )}
-            />
-          </div>
+          <PokemonSprite
+            pokeApiId={pokemon.pokemon.pokeApiId}
+            name={pokemon.pokemon.name}
+            variant="feature"
+          />
           <div className="space-y-1">
-            <div className="flex justify-center">
+            <div className="flex items-center justify-center">
               <div className="relative flex items-center">
-                <h1 className="font-heading text-3xl font-semibold text-stone-800">
+                <h1 className="font-heading text-2xl font-semibold text-stone-600">
                   {pokemon.nickname}
                 </h1>
-                <div className="absolute left-full pl-2">
+                <div className="absolute left-full pl-1">
                   <RenamePokemonDialog
                     userPokemonId={pokemon.id}
                     nickname={pokemon.nickname}
@@ -136,18 +125,20 @@ export function PokemonDetail({
                 </div>
               </div>
             </div>
-            <p className="text-sm font-medium text-stone-400">
+            <div className="text-xs font-medium text-stone-500">
               {pokemon.pokemon.name}
-            </p>
-            <p className="text-sm text-stone-500">
+            </div>
+            <div className="text-xs text-stone-500">
               Since {dateFormatter.format(acquiredAt)}
-            </p>
+            </div>
           </div>
+          <BondLevelSteps earned={pokemon.earnedBondLevels} />
+          <div className="border border-stone-300 w-full" />
           {!pokemon.isFainted ? (
             <>
               <div className="space-y-1">
                 <ActiveSteak activeStreak={pokemon.activeStreak} />
-                <HeartStatus value={pokemon.heart} />
+                <HeartStatus size="md" value={pokemon.heart} />
               </div>
               <div className="flex w-full flex-col gap-3">
                 <StatusBlock
@@ -156,7 +147,7 @@ export function PokemonDetail({
                   action={
                     <ActionButton
                       label="Feed"
-                      Icon={Drumstick}
+                      Icon={Cookie}
                       cooldownEndsAt={pokemon.feedCooldownEndsAt}
                       isPending={feedPending}
                       onClick={handleFeed}
@@ -169,7 +160,7 @@ export function PokemonDetail({
                   action={
                     <ActionButton
                       label="Play"
-                      Icon={Gamepad2}
+                      Icon={Hand}
                       cooldownEndsAt={pokemon.playCooldownEndsAt}
                       isPending={playPending}
                       onClick={handlePlay}
@@ -180,10 +171,7 @@ export function PokemonDetail({
             </>
           ) : (
             <div className="flex flex-col items-center gap-3">
-              <div className="flex items-center gap-2 rounded-full bg-stone-100 px-4 py-2 text-sm font-medium text-stone-500">
-                <Skull className="size-4" aria-hidden />
-                <span>Fainted</span>
-              </div>
+              <FaintedBadge />
               <ReviveButton
                 reviveCount={reviveCount}
                 isPending={revivePending}
@@ -191,7 +179,6 @@ export function PokemonDetail({
               />
             </div>
           )}
-          <BondLevelSteps earned={pokemon.earnedBondLevels} />
         </CardContent>
       </Card>
     </div>

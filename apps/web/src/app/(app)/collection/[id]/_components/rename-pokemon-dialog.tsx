@@ -1,22 +1,22 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Pencil } from "lucide-react";
-import { toast } from "sonner";
+import { renameAction } from "@/app/(app)/collection/actions";
+import {
+  MAX_NICKNAME_LENGTH,
+  validateNickname,
+} from "@/app/(app)/collection/validation";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { renameAction } from "@/app/(app)/collection/actions";
-import {
-  validateNickname,
-  MAX_NICKNAME_LENGTH,
-} from "@/app/(app)/collection/validation";
+import { Pencil } from "lucide-react";
+import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 export function RenamePokemonDialog({
   userPokemonId,
@@ -61,7 +61,7 @@ export function RenamePokemonDialog({
           setValue(nickname);
           setOpen(true);
         }}
-        className="inline-flex size-7 shrink-0 cursor-pointer items-end justify-center rounded-full text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+        className="inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
       >
         <Pencil className="size-4" aria-hidden />
       </button>

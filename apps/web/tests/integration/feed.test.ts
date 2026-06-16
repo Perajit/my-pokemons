@@ -38,7 +38,7 @@ describe("feedPokemon()", () => {
     expect(persistedUser!.coins).toBe(103); // 100 + feedCoinReward(3)
   });
 
-  it("awards BOND_LEVEL_1D + BOND_LEVEL_7D when feeding a pokemon acquired 8 days ago", async () => {
+  it("awards BOND_LEVEL_7D when feeding a pokemon acquired 8 days ago (day-0 welcome is display-only)", async () => {
     const user = await seedUser(100);
     const pokemon = await seedPokemon();
     const up = await seedUserPokemon(user.id, pokemon.id, {
@@ -51,27 +51,22 @@ describe("feedPokemon()", () => {
       { type: "pokemon_fed", pokemonName: "Pikachu", coinsEarned: 3 },
       {
         type: "achievement_unlocked",
-        achievementKey: "BOND_LEVEL_1D",
-        coinsEarned: 5,
-      },
-      {
-        type: "achievement_unlocked",
         achievementKey: "BOND_LEVEL_7D",
         coinsEarned: 15,
       },
     ]);
 
-    // Durable facts: the achievement ledger (drives coin dedup) + the credited balance.
+    // Durable facts: the achievement ledger (drives coin dedup) + the credited
+    // balance. The day-0 welcome badge writes no ledger row.
     const achievements = await db.userPokemonAchievement.findMany({
       where: { userPokemonId: up.id },
     });
     expect(achievements.map((m) => m.achievementKey).sort()).toEqual([
-      "BOND_LEVEL_1D",
       "BOND_LEVEL_7D",
     ]);
     const persistedUser = await db.user.findUnique({ where: { id: user.id } });
-    // 100 + feedCoinReward(3) + BOND_LEVEL_1D(5) + BOND_LEVEL_7D(15) = 123
-    expect(persistedUser!.coins).toBe(123);
+    // 100 + feedCoinReward(3) + BOND_LEVEL_7D(15) = 118
+    expect(persistedUser!.coins).toBe(118);
   });
 
   it("does not re-credit bond levels on a second feed after the cooldown", async () => {
@@ -98,10 +93,10 @@ describe("feedPokemon()", () => {
     const achievementCount = await db.userPokemonAchievement.count({
       where: { userPokemonId: up.id },
     });
-    expect(achievementCount).toBe(2);
+    expect(achievementCount).toBe(1);
     const persistedUser = await db.user.findUnique({ where: { id: user.id } });
-    // First feed: 100 + 3 + 5 + 15 = 123. Second feed: +3 (no new bond levels) = 126.
-    expect(persistedUser!.coins).toBe(126);
+    // First feed: 100 + 3 + 15 = 118. Second feed: +3 (no new bond levels) = 121.
+    expect(persistedUser!.coins).toBe(121);
   });
 
   it("throws NotOwnedError when feeding another user's pokemon", async () => {

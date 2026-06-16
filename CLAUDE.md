@@ -43,14 +43,16 @@ Tooling: pnpm workspaces + Turborepo.
 
 ## Bond Levels (`packages/config/src/bond-levels.ts`)
 
-Awarded per Pokémon for consecutive active days. Config lives in `packages/config`; the DB uses plain string columns (`achievementType = "bondLevel"`, `achievementKey = "BOND_LEVEL_*D"`) so adding new achievement categories requires no migration.
+Awarded per Pokémon for active days. Config lives in `packages/config`; the DB uses plain string columns (`achievementType = "bondLevel"`, `achievementKey = "BOND_LEVEL_*D"`) so adding new achievement categories requires no migration.
+
+The first tier (`BOND_LEVEL_0D`, "New Friend") is a **display-only welcome badge**: it lights up the moment a Pokémon is obtained, earns no coins, and writes no ledger row. The time-based tiers (7d+) are the paid, ledgered rewards. `getEarnedBondLevels` (display path) includes the day-0 badge; `getNewBondLevels` (coins/events/ledger path) filters to `days > 0`, so the welcome badge never flows through the reward path.
 
 ```ts
 export type BondLevelKey =
-  "BOND_LEVEL_1D" | "BOND_LEVEL_7D" | "BOND_LEVEL_30D" | "BOND_LEVEL_90D" | "BOND_LEVEL_365D";
+  "BOND_LEVEL_0D" | "BOND_LEVEL_7D" | "BOND_LEVEL_30D" | "BOND_LEVEL_90D" | "BOND_LEVEL_365D";
 
 export const BOND_LEVEL_LABELS: Record<BondLevelKey, string> = {
-  BOND_LEVEL_1D: "New Friend",   BOND_LEVEL_7D: "Close Friend",
+  BOND_LEVEL_0D: "New Friend",   BOND_LEVEL_7D: "Close Friend",
   BOND_LEVEL_30D: "Best Friend", BOND_LEVEL_90D: "True Companion",
   BOND_LEVEL_365D: "Lifetime Companion",
 };
@@ -58,7 +60,7 @@ export const BOND_LEVEL_LABELS: Record<BondLevelKey, string> = {
 export type BondLevelConfig = { key: BondLevelKey; days: number; coinReward: number };
 
 export const BOND_LEVEL_CONFIG: readonly BondLevelConfig[] = [
-  { key: "BOND_LEVEL_1D",   days: 1,   coinReward: 5 },
+  { key: "BOND_LEVEL_0D",   days: 0,   coinReward: 0 },   // display-only welcome badge
   { key: "BOND_LEVEL_7D",   days: 7,   coinReward: 15 },
   { key: "BOND_LEVEL_30D",  days: 30,  coinReward: 40 },
   { key: "BOND_LEVEL_90D",  days: 90,  coinReward: 100 },
@@ -125,7 +127,7 @@ All functions are pure (no DB, no side effects). Called from API route handlers 
 
 - `computeDecayedState(currentFullness, currentMood, lastCalculatedAt, fullnessDecayPerHour, moodDecayPerHour, now)` — Returns `{ currentFullness, currentMood, faintedAt }` after applying decay. Pure function of primitives; used by both the read path and action handlers.
 
-- `getNewBondLevels(activeDayCount, earnedKeys)` — Returns `BondLevelConfig[]` for bond levels that qualify by `activeDayCount` and are not yet in `earnedKeys` (a `BondLevelKey[]`). Caller writes the `UserPokemonAchievement` ledger row(s) and credits coins. Called in Feed/Play service layer only. Lives in `packages/config/src/bond-levels.ts`.
+- `getNewBondLevels(activeDayCount, earnedKeys)` — Returns `BondLevelConfig[]` for paid bond levels (`days > 0`) that qualify by `activeDayCount` and are not yet in `earnedKeys` (a `BondLevelKey[]`). The day-0 welcome badge is excluded (display-only). Caller writes the `UserPokemonAchievement` ledger row(s) and credits coins. Called in Feed/Play service layer only. Lives in `packages/config/src/bond-levels.ts`.
 
 - `getEarnedBondLevels(activeDayCount)` — Returns `BondLevelKey[]` for every bond-level threshold reached by `activeDayCount`. **Derived, not stored**: the read path (`toUserPokemon`) sets `earnedBondLevels` from this, so the displayed icons always match the streak even before the coins are claimed on the next feed/play. Lives in `packages/config/src/bond-levels.ts`.
 

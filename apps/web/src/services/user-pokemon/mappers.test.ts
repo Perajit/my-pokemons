@@ -85,9 +85,9 @@ describe("toUserPokemonDto()", () => {
 
   it("passes the derived bond levels through to the DTO", () => {
     const result = toUserPokemonDto(
-      makeUserPokemon({ earnedBondLevels: ["BOND_LEVEL_1D", "BOND_LEVEL_7D"] }),
+      makeUserPokemon({ earnedBondLevels: ["BOND_LEVEL_0D", "BOND_LEVEL_7D"] }),
     );
-    expect(result.earnedBondLevels).toEqual(["BOND_LEVEL_1D", "BOND_LEVEL_7D"]);
+    expect(result.earnedBondLevels).toEqual(["BOND_LEVEL_0D", "BOND_LEVEL_7D"]);
   });
 
   it("returns an empty bond levels array when none are earned", () => {

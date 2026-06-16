@@ -18,7 +18,7 @@ const ITEM_VISUALS: Record<ItemKey, { Icon: LucideIcon; color: string }> = {
   REVIVE: { Icon: HeartPulse, color: "text-rose-500" },
 };
 
-export function ItemProductCard({
+export function ItemCard({
   item,
   userCoins,
 }: {
@@ -49,7 +49,7 @@ export function ItemProductCard({
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1">
-              <p className="truncate font-heading text-base font-medium text-stone-700">
+              <p className="truncate font-heading text-base font-medium text-stone-600">
                 {item.name}
               </p>
               <Popover>

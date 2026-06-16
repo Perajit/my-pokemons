@@ -15,7 +15,7 @@ export function StatusBlock({
 
   return (
     <div
-      className="flex flex-wrap items-center gap-4 bg-stone-100 border-stone-300 border rounded-lg p-3 sm:p-4"
+      className="flex flex-wrap items-center gap-4 bg-stone-100 border-stone-300 border rounded-xl p-3 sm:p-4"
       aria-label={`${label}: ${rounded} of 100`}
     >
       <div className="flex-1 flex flex-col gap-0.5 items-start">
@@ -25,9 +25,12 @@ export function StatusBlock({
           </span>
           <span className="tabular-nums text-stone-500">({rounded} / 100)</span>
         </div>
-        <div className="w-full h-2 overflow-hidden rounded-full bg-stone-200 mt-0.5">
+        <div className="w-full h-1 overflow-hidden rounded-full bg-stone-200 mt-0.5">
           <div
-            className={cn("h-full rounded-full", color)}
+            className={cn(
+              "h-full rounded-full transition-[width] duration-500 ease-out",
+              color,
+            )}
             style={{ width: `${rounded}%` }}
           />
         </div>

@@ -1,11 +1,6 @@
 "use client";
 
-import Image from "next/image";
-import { useState } from "react";
-import { toast } from "sonner";
-import { Coins } from "lucide-react";
-import type { ShopPokemonDto } from "@/services/shop";
-import { buyPokemonAction } from "../actions";
+import { PokemonSprite } from "@/components/pokemon-sprite";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -16,12 +11,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import type { ShopPokemonDto } from "@/services/shop";
+import { Coins } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { buyPokemonAction } from "../actions";
 
-function spriteUrl(pokeApiId: number) {
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokeApiId}.png`;
-}
-
-export function PokemonProductCard({
+export function PokemonCard({
   pokemon,
   userCoins,
 }: {
@@ -76,24 +72,20 @@ export function PokemonProductCard({
         className="group cursor-pointer rounded-2xl border-stone-200/70 bg-gradient-to-b from-white to-stone-50 shadow-sm transition-all hover:shadow-lg motion-safe:hover:-translate-y-1 focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:outline-none motion-safe:focus-visible:-translate-y-1"
       >
         <CardContent className="flex flex-col items-center gap-2 p-4 text-center">
-          <div className="flex size-28 shrink-0 items-center justify-center sm:size-32">
-            <Image
-              src={spriteUrl(pokemon.pokeApiId)}
-              alt={pokemon.name}
-              width={192}
-              height={192}
-              className="size-24 drop-shadow-sm transition-transform duration-200 motion-safe:group-hover:scale-110 motion-safe:group-focus-visible:scale-110 sm:size-28"
-            />
-          </div>
-          <p className="font-heading text-base font-medium text-stone-700">
+          <PokemonSprite
+            pokeApiId={pokemon.pokeApiId}
+            name={pokemon.name}
+            variant="card"
+          />
+          <h3 className="font-heading text-base font-medium text-stone-600">
             {pokemon.name}
-          </p>
-          <p
+          </h3>
+          <span
             aria-label={`You own ${pokemon.userOwnedCount}`}
             className="-mt-1 text-xs text-stone-500 tabular-nums"
           >
             Owned &times;{pokemon.userOwnedCount}
-          </p>
+          </span>
           <span
             aria-label={`Price: ${pokemon.price} coins`}
             className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-sm font-semibold leading-none tabular-nums text-amber-800 ring-2 ring-amber-300 ring-inset"
@@ -114,15 +106,11 @@ export function PokemonProductCard({
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col items-center gap-5 py-2">
-            <div className="flex size-48 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-amber-100/80 to-transparent">
-              <Image
-                src={spriteUrl(pokemon.pokeApiId)}
-                alt={pokemon.name}
-                width={160}
-                height={160}
-                className="size-40 drop-shadow-md"
-              />
-            </div>
+            <PokemonSprite
+              pokeApiId={pokemon.pokeApiId}
+              name={pokemon.name}
+              variant="feature"
+            />
             <div className="grid w-full grid-cols-2 gap-2">
               <div className="flex flex-col items-center gap-1 rounded-xl bg-stone-50 px-3 py-2 ring-1 ring-stone-200 ring-inset">
                 <span className="text-xs text-stone-500">Price</span>

@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, act, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import * as React from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("next/link", () => ({
   default: ({
@@ -43,14 +43,14 @@ vi.mock("../../actions", () => ({
   renameAction: vi.fn(),
 }));
 
+import type { UserPokemonDto } from "@/services/user-pokemon";
 import { toast } from "sonner";
 import {
   feedAction,
   playAction,
-  reviveAction,
   renameAction,
+  reviveAction,
 } from "../../actions";
-import type { UserPokemonDto } from "@/services/user-pokemon";
 import { PokemonDetail } from "./pokemon-detail";
 
 const mockFeed = feedAction as ReturnType<typeof vi.fn>;
@@ -158,14 +158,6 @@ describe("PokemonDetail", () => {
     expect(screen.queryByLabelText(/Heart:/)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/Fullness:/)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/Mood:/)).not.toBeInTheDocument();
-  });
-
-  it("desaturates the sprite when fainted", () => {
-    const { container } = render(
-      <PokemonDetail initial={makePokemon({ isFainted: true })} />,
-    );
-    const img = container.querySelector("img");
-    expect(img?.className).toContain("grayscale");
   });
 
   it("renders Feed and Play buttons when active", () => {
@@ -290,7 +282,7 @@ describe("PokemonDetail", () => {
 
     expect(toast.success).toHaveBeenCalledWith("Played with Pikachu! +5 coins");
     expect(toast.success).toHaveBeenCalledWith(
-      "Earned: Close Friend (+15 coins)",
+      "Earned: Good Buddy (+15 coins)",
     );
   });
 
@@ -303,8 +295,8 @@ describe("PokemonDetail", () => {
           { type: "pokemon_fed", pokemonName: "Pikachu", coinsEarned: 3 },
           {
             type: "achievement_unlocked",
-            achievementKey: "BOND_LEVEL_1D",
-            coinsEarned: 5,
+            achievementKey: "BOND_LEVEL_30D",
+            coinsEarned: 40,
           },
         ],
       },
@@ -316,7 +308,9 @@ describe("PokemonDetail", () => {
     });
 
     expect(toast.success).toHaveBeenCalledWith("Fed Pikachu! +3 coins");
-    expect(toast.success).toHaveBeenCalledWith("Earned: New Friend (+5 coins)");
+    expect(toast.success).toHaveBeenCalledWith(
+      "Earned: Close Buddy (+40 coins)",
+    );
   });
 
   it("toasts the error message on a failed Feed click", async () => {

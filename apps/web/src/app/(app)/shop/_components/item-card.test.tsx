@@ -16,7 +16,7 @@ vi.mock("sonner", () => ({
 vi.mock("../actions", () => ({ buyItemAction: vi.fn() }));
 
 import { buyItemAction } from "../actions";
-import { ItemProductCard } from "./item-product-card";
+import { ItemCard } from "./item-card";
 
 const mockAction = buyItemAction as Mock;
 
@@ -34,9 +34,9 @@ beforeEach(() => {
   mockAction.mockResolvedValue({ ok: true });
 });
 
-describe("ItemProductCard", () => {
+describe("ItemCard", () => {
   it("renders name, price, and owned count (description is hidden until the info icon)", () => {
-    render(<ItemProductCard item={revive} userCoins={500} />);
+    render(<ItemCard item={revive} userCoins={500} />);
 
     expect(screen.getByText("Revive")).toBeInTheDocument();
     expect(screen.getByText(/150/)).toBeInTheDocument();
@@ -47,7 +47,7 @@ describe("ItemProductCard", () => {
   });
 
   it("reveals the description in a popup when the info icon is clicked", async () => {
-    render(<ItemProductCard item={revive} userCoins={500} />);
+    render(<ItemCard item={revive} userCoins={500} />);
 
     fireEvent.click(screen.getByRole("button", { name: /about revive/i }));
 
@@ -57,7 +57,7 @@ describe("ItemProductCard", () => {
   });
 
   it("buys the item and shows a success toast", async () => {
-    render(<ItemProductCard item={revive} userCoins={500} />);
+    render(<ItemCard item={revive} userCoins={500} />);
     fireEvent.click(screen.getByRole("button", { name: /^buy$/i }));
 
     await waitFor(() => {
@@ -75,7 +75,7 @@ describe("ItemProductCard", () => {
         message: "Insufficient coins",
       },
     });
-    render(<ItemProductCard item={revive} userCoins={500} />);
+    render(<ItemCard item={revive} userCoins={500} />);
     fireEvent.click(screen.getByRole("button", { name: /^buy$/i }));
 
     await waitFor(() => {
@@ -85,7 +85,7 @@ describe("ItemProductCard", () => {
   });
 
   it("disables Buy and shows a hint when the balance is too low", () => {
-    render(<ItemProductCard item={revive} userCoins={100} />);
+    render(<ItemCard item={revive} userCoins={100} />);
 
     expect(screen.getByRole("button", { name: /^buy$/i })).toBeDisabled();
     expect(screen.getByText(/not enough coins/i)).toBeInTheDocument();

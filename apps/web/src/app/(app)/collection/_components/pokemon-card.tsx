@@ -1,18 +1,11 @@
+import { PokemonSprite } from "@/components/pokemon-sprite";
 import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 import type { UserPokemonDto } from "@/services/user-pokemon";
-import { Drumstick, Heart, Smile } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
-import { getStatusLevelColorClassnames } from "./status-levels";
-
-function spriteUrl(pokeApiId: number) {
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokeApiId}.png`;
-}
+import { FaintedBadge } from "./fainted-badge";
+import { HeartStatus } from "./heart-status";
 
 export function PokemonCard({ pokemon }: { pokemon: UserPokemonDto }) {
-  const fullness = Math.round(pokemon.currentFullness);
-  const mood = Math.round(pokemon.currentMood);
   const heart = Math.round(pokemon.heart);
 
   return (
@@ -22,76 +15,22 @@ export function PokemonCard({ pokemon }: { pokemon: UserPokemonDto }) {
       aria-label={`Open ${pokemon.nickname}`}
     >
       <Card className="group cursor-pointer rounded-2xl border-stone-200/70 bg-white shadow-sm transition-all hover:shadow-md motion-safe:hover:-translate-y-0.5">
-        <CardContent className="px-5 py-3.5 sm:p-4">
-          <div className="mx-auto flex max-w-sm flex-row items-center gap-4 sm:max-w-none sm:flex-col sm:items-center sm:gap-2.5 sm:text-center">
-            <Image
-              src={spriteUrl(pokemon.pokemon.pokeApiId)}
-              alt={pokemon.pokemon.name}
-              width={192}
-              height={192}
-              className={cn(
-                "size-16 shrink-0 drop-shadow-sm transition-transform duration-200 motion-safe:group-hover:scale-110 sm:size-20",
-                pokemon.isFainted && "opacity-50 grayscale",
-              )}
-            />
-            <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5 sm:flex-none sm:items-center sm:gap-2">
-              <div className="flex flex-col items-start gap-1 sm:items-center">
-                <p className="font-heading text-base font-medium text-stone-700">
-                  {pokemon.nickname}
-                </p>
-                {pokemon.isFainted ? (
-                  <span className="rounded-full bg-stone-100 px-2.5 py-1 text-sm font-medium text-stone-500">
-                    Fainted
-                  </span>
-                ) : (
-                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-sm font-medium text-emerald-700">
-                    Active
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-4">
-                <span
-                  aria-label={`Heart: ${heart} of 100`}
-                  className="inline-flex items-center gap-1 text-sm text-stone-700"
-                >
-                  <Heart
-                    className={cn(
-                      "size-4 fill-current",
-                      getStatusLevelColorClassnames(heart).text,
-                    )}
-                    aria-hidden
-                  />
-                  <span className="tabular-nums">{heart}</span>
-                </span>
-                <span
-                  aria-label={`Fullness: ${fullness}`}
-                  className="inline-flex items-center gap-1 text-sm text-stone-700"
-                >
-                  <Drumstick
-                    className={cn(
-                      "size-4",
-                      getStatusLevelColorClassnames(fullness).text,
-                    )}
-                    aria-hidden
-                  />
-                  <span className="tabular-nums">{fullness}</span>
-                </span>
-                <span
-                  aria-label={`Mood: ${mood}`}
-                  className="inline-flex items-center gap-1 text-sm text-stone-700"
-                >
-                  <Smile
-                    className={cn(
-                      "size-4",
-                      getStatusLevelColorClassnames(mood).text,
-                    )}
-                    aria-hidden
-                  />
-                  <span className="tabular-nums">{mood}</span>
-                </span>
-              </div>
+        <CardContent className="flex flex-col items-center gap-2 p-4 text-center">
+          <PokemonSprite
+            pokeApiId={pokemon.pokemon.pokeApiId}
+            name={pokemon.pokemon.name}
+            variant="card"
+          />
+          <h3 className="font-heading text-base font-medium text-stone-700">
+            {pokemon.nickname}
+          </h3>
+          {!pokemon.isFainted ? (
+            <HeartStatus size="sm" value={heart} />
+          ) : (
+            <div className="flex flex-col items-start gap-1 sm:items-center">
+              <FaintedBadge size="sm" />
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </Link>

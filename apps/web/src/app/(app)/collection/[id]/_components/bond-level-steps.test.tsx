@@ -5,11 +5,11 @@ import type { BondLevelKey } from "@my-pokemons/config/bond-levels";
 import { BondLevelSteps } from "./bond-level-steps";
 
 const LEVEL_NAMES = [
-  "New Friend",
-  "Close Friend",
-  "Best Friend",
-  "True Companion",
-  "Lifetime Companion",
+  "Just Met",
+  "Good Buddy",
+  "Close Buddy",
+  "Best Buddy",
+  "Forever Buddy",
 ];
 
 describe("BondLevelSteps", () => {
@@ -22,9 +22,9 @@ describe("BondLevelSteps", () => {
     });
   });
 
-  it("shows the day threshold for each level", () => {
+  it("shows the day threshold for each level, with 'New' for the day-0 welcome", () => {
     render(<BondLevelSteps earned={[]} />);
-    ["1d", "7d", "30d", "90d", "365d"].forEach((days) => {
+    ["New", "7d", "30d", "90d", "365d"].forEach((days) => {
       expect(screen.getByText(days)).toBeInTheDocument();
     });
   });
@@ -33,7 +33,7 @@ describe("BondLevelSteps", () => {
     render(
       <BondLevelSteps
         earned={[
-          "BOND_LEVEL_1D" as BondLevelKey,
+          "BOND_LEVEL_0D" as BondLevelKey,
           "BOND_LEVEL_30D" as BondLevelKey,
         ]}
       />,

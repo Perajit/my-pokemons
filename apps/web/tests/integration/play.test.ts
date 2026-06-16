@@ -36,12 +36,12 @@ describe("playWithPokemon()", () => {
     expect(persistedUser!.coins).toBe(105); // 100 + playCoinReward(5)
   });
 
-  it("awards BOND_LEVEL_1D when playing with a pokemon acquired 1 day ago", async () => {
+  it("awards BOND_LEVEL_7D when playing with a pokemon acquired 7 days ago", async () => {
     const user = await seedUser(100);
     const pokemon = await seedPokemon();
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const up = await seedUserPokemon(user.id, pokemon.id, {
-      acquiredAt: oneDayAgo,
+      acquiredAt: sevenDaysAgo,
     });
 
     const result = await playWithPokemon(user.id, up.id);
@@ -50,19 +50,19 @@ describe("playWithPokemon()", () => {
       { type: "pokemon_played", pokemonName: "Pikachu", coinsEarned: 5 },
       {
         type: "achievement_unlocked",
-        achievementKey: "BOND_LEVEL_1D",
-        coinsEarned: 5,
+        achievementKey: "BOND_LEVEL_7D",
+        coinsEarned: 15,
       },
     ]);
     const achievements = await db.userPokemonAchievement.findMany({
       where: { userPokemonId: up.id },
     });
     expect(achievements.map((m) => m.achievementKey)).toEqual([
-      "BOND_LEVEL_1D",
+      "BOND_LEVEL_7D",
     ]);
     const persistedUser = await db.user.findUnique({ where: { id: user.id } });
-    // 100 + playCoinReward(5) + BOND_LEVEL_1D(5) = 110
-    expect(persistedUser!.coins).toBe(110);
+    // 100 + playCoinReward(5) + BOND_LEVEL_7D(15) = 120
+    expect(persistedUser!.coins).toBe(120);
   });
 
   it("throws NotOwnedError when playing with another user's pokemon", async () => {
