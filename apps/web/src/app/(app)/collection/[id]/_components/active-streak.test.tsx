@@ -9,9 +9,9 @@ describe("ActiveSteak", () => {
     expect(screen.getByText(/7 days streak/i)).toBeInTheDocument();
   });
 
-  it("renders 0 days streak for a freshly acquired pokemon", () => {
+  it("renders < 1 day streak for a freshly acquired pokemon", () => {
     render(<ActiveSteak activeStreak={0} />);
-    expect(screen.getByText(/0 days streak/i)).toBeInTheDocument();
+    expect(screen.getByText(/< 1 day streak/i)).toBeInTheDocument();
   });
 
   it("uses the singular label at exactly 1 day", () => {
