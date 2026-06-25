@@ -7,6 +7,7 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { updateUserProfile } from "@/services/user";
+import type { UserProfileDto } from "@/services/user";
 import { updateProfileAction } from "./actions";
 
 const mockAuth = auth as ReturnType<typeof vi.fn>;
@@ -48,7 +49,7 @@ describe("updateProfileAction()", () => {
 
   it("updates the profile and revalidates layout on success", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } });
-    const updated = {
+    const updated: UserProfileDto = {
       id: "user-1",
       name: "Ash",
       email: "ash@example.com",

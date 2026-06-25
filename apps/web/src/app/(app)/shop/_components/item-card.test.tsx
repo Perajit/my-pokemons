@@ -17,12 +17,13 @@ vi.mock("../actions", () => ({ buyItemAction: vi.fn() }));
 
 import { buyItemAction } from "../actions";
 import { ItemCard } from "./item-card";
+import type { ShopItemDto } from "@/services/shop";
 
 const mockAction = buyItemAction as Mock;
 
-const revive = {
+const revive: ShopItemDto = {
   id: "item-1",
-  key: "REVIVE" as const,
+  key: "REVIVE",
   name: "Revive",
   description: "Wake a fainted Pokémon and restore it to 50% HP.",
   price: 150,

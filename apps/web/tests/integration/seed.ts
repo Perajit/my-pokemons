@@ -1,7 +1,8 @@
 import { ITEM_CONFIG } from "@my-pokemons/config/items";
+import type { PokemonConfig } from "@my-pokemons/config/pokemons";
 import { db } from "@/lib/db";
 
-export const pikachuSeed = {
+export const pikachuSeed: PokemonConfig = {
   pokeApiId: 25,
   name: "Pikachu",
   description: "Electric mouse Pokémon.",

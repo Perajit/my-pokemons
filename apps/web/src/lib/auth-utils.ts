@@ -4,7 +4,7 @@ import { db } from "./db";
 export async function authorizeUser(credentials: {
   email: string;
   password: string;
-}) {
+}): Promise<{ id: string; email: string; name: string | null } | null> {
   const user = await db.user.findUnique({
     where: { email: credentials.email },
   });

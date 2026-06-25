@@ -4,7 +4,7 @@ import { render, screen } from "@testing-library/react";
 import type { BondLevelKey } from "@my-pokemons/config/bond-levels";
 import { BondLevelSteps } from "./bond-level-steps";
 
-const LEVEL_NAMES = [
+const LEVEL_NAMES: string[] = [
   "Just Met",
   "Good Buddy",
   "Close Buddy",

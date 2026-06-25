@@ -9,7 +9,10 @@ vi.mock("@/app/actions", () => ({ logoutAction: vi.fn() }));
 
 import { UserMenu } from "./menu";
 
-const namedUser = { name: "Ash Ketchum", email: "ash@example.com" };
+const namedUser: { name: string | null; email: string } = {
+  name: "Ash Ketchum",
+  email: "ash@example.com",
+};
 
 beforeEach(() => {
   vi.clearAllMocks();

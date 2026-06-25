@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-const USER = {
+const USER: { email: string; password: string } = {
   email: `test-${Date.now()}@example.com`,
   password: "Password1!",
 };

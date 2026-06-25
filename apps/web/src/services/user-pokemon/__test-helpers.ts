@@ -1,7 +1,9 @@
+import type { PokemonConfig } from "@my-pokemons/config/pokemons";
+
 // Shared test fixture: the one piece used by more than one sibling test file
 // (mappers.test.ts and bond-levels.test.ts). Single-use builders live in
 // their own test file.
-export const basePokemon = {
+export const basePokemon: PokemonConfig & { id: string } = {
   id: "poke-1",
   pokeApiId: 25,
   name: "Pikachu",

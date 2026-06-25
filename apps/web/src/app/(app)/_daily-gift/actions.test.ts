@@ -11,6 +11,7 @@ import { revalidatePath } from "next/cache";
 import { claimDailyGift } from "@/services/user";
 import { AlreadyClaimedError } from "@/services/errors";
 import { claimDailyGiftAction } from "./actions";
+import type { DailyGiftReward } from "@my-pokemons/config/daily-gift";
 
 const mockAuth = auth as ReturnType<typeof vi.fn>;
 const mockClaimDailyGift = claimDailyGift as ReturnType<typeof vi.fn>;
@@ -34,7 +35,7 @@ describe("claimDailyGiftAction()", () => {
 
   it("calls claimDailyGift and returns the reward on success", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } });
-    const reward = { type: "coins", amount: 30 };
+    const reward: DailyGiftReward = { type: "coins", amount: 30 };
     mockClaimDailyGift.mockResolvedValue(reward);
 
     const result = await claimDailyGiftAction();

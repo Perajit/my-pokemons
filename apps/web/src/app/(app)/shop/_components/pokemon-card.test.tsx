@@ -20,10 +20,11 @@ vi.mock("../actions", () => ({ buyPokemonAction: vi.fn() }));
 
 import { buyPokemonAction } from "../actions";
 import { PokemonCard } from "./pokemon-card";
+import type { ShopPokemonDto } from "@/services/shop";
 
 const mockAction = buyPokemonAction as Mock;
 
-const pikachu = {
+const pikachu: ShopPokemonDto = {
   id: "pika-id",
   name: "Pikachu",
   pokeApiId: 25,

@@ -7,7 +7,7 @@ import { validateEmail, validatePassword } from "../validation";
 export async function registerAction(
   _prevState: string | null,
   formData: FormData,
-) {
+): Promise<string | null> {
   const name = (formData.get("name") as string) || undefined;
   const email = (formData.get("email") as string) ?? "";
   const password = (formData.get("password") as string) ?? "";
