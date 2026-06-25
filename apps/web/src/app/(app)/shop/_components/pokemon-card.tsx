@@ -1,5 +1,6 @@
 "use client";
 
+import { CoinBadge } from "@/components/coin-badge";
 import { PokemonSprite } from "@/components/pokemon-sprite";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,7 +12,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CoinBadge } from "@/components/coin-badge";
 import type { ShopPokemonDto } from "@/services/shop";
 import { Coins, Cookie, Hand, TrendingDown } from "lucide-react";
 import { useState } from "react";
@@ -91,16 +91,16 @@ export function PokemonCard({
         </CardContent>
       </Card>
       <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="top-0 left-0 h-svh w-screen max-w-none translate-x-0 translate-y-0 rounded-none sm:top-1/2 sm:left-1/2 sm:h-auto sm:max-w-md sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl">
-          <DialogHeader>
+        <DialogContent className="top-0 left-0 flex flex-col overflow-hidden h-svh w-screen max-w-none translate-x-0 translate-y-0 rounded-none sm:top-1/2 sm:left-1/2 sm:h-auto sm:max-h-[calc(100svh-2rem)] sm:max-w-md sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl">
+          <DialogHeader className="shrink-0">
             <DialogTitle className="text-center font-heading text-2xl font-semibold text-amber-800">
               {pokemon.name}
             </DialogTitle>
+          </DialogHeader>
+          <div className="flex min-h-0 flex-1 flex-col items-center gap-5 overflow-y-auto py-2">
             <DialogDescription className="text-center text-stone-600">
               {pokemon.description}
             </DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col items-center gap-5 py-2">
             <PokemonSprite
               pokeApiId={pokemon.pokeApiId}
               name={pokemon.name}
@@ -183,7 +183,7 @@ export function PokemonCard({
               </p>
             )}
           </div>
-          <DialogFooter>
+          <DialogFooter className="shrink-0">
             <Button
               type="button"
               variant="outline"
