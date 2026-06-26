@@ -10,7 +10,7 @@ export type ItemConfig = {
   price: number;
 };
 
-export const ITEM_CONFIG: readonly ItemConfig[] = [
+export const ITEM_CONFIGS: readonly ItemConfig[] = [
   {
     key: "REVIVE",
     name: "Revive",

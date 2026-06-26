@@ -22,7 +22,7 @@ export type BondLevelConfig = {
 // The first tier (day 0, "Just Met") is a display-only welcome badge: it
 // lights up the moment a pokemon is obtained, earns no coins, and writes no
 // ledger row. The time-based tiers (7d+) are the paid, ledgered rewards.
-export const BOND_LEVEL_CONFIG: readonly BondLevelConfig[] = [
+export const BOND_LEVEL_CONFIGS: readonly BondLevelConfig[] = [
   { key: "BOND_LEVEL_0D", days: 0, coinReward: 0 },
   { key: "BOND_LEVEL_7D", days: 7, coinReward: 15 },
   { key: "BOND_LEVEL_30D", days: 30, coinReward: 40 },
@@ -37,7 +37,7 @@ export function getNewBondLevels(
   activeDayCount: number,
   earnedKeys: BondLevelKey[],
 ): BondLevelConfig[] {
-  return BOND_LEVEL_CONFIG.filter(
+  return BOND_LEVEL_CONFIGS.filter(
     (config) =>
       config.days > 0 &&
       activeDayCount >= config.days &&
@@ -49,7 +49,7 @@ export function getNewBondLevels(
 // (not stored), so the display always matches the streak even before coins
 // are claimed on the next feed/play.
 export function getEarnedBondLevels(activeDayCount: number): BondLevelKey[] {
-  return BOND_LEVEL_CONFIG.filter(
+  return BOND_LEVEL_CONFIGS.filter(
     (config) => activeDayCount >= config.days,
   ).map((config) => config.key);
 }

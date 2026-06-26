@@ -5,14 +5,15 @@ import { describe, it, expect, beforeEach, afterAll } from "vitest";
 import { db } from "@/lib/db";
 import { NotFoundError } from "@/services/errors";
 import { getUserProfileDto, updateUserProfile } from "@/services/user";
-import { seedUser, resetGameplayTables } from "./seed";
+import { seedUser, resetGameplayTables } from "./db-helpers";
+import { makeUserData } from "@/test/fixtures";
 
 beforeEach(resetGameplayTables);
 afterAll(() => db.$disconnect());
 
 describe("getUserProfileDto()", () => {
   it("returns the user's profile with createdAt as an ISO string", async () => {
-    const user = await seedUser(0);
+    const user = await seedUser(makeUserData({ coins: 0 }));
 
     const profile = await getUserProfileDto(user.id);
 
@@ -30,7 +31,7 @@ describe("getUserProfileDto()", () => {
 
 describe("updateUserProfile()", () => {
   it("persists a trimmed display name and returns the updated profile", async () => {
-    const user = await seedUser(0);
+    const user = await seedUser(makeUserData({ coins: 0 }));
 
     const profile = await updateUserProfile(user.id, {
       name: "  Ash Ketchum  ",

@@ -1,4 +1,4 @@
-import { DAILY_GIFT_OPTIONS } from "@my-pokemons/config/daily-gift";
+import { DAILY_GIFT_CONFIGS } from "@my-pokemons/config/daily-gift";
 import type { DailyGiftReward } from "@my-pokemons/config/daily-gift";
 import {
   isDailyGiftAvailable,
@@ -44,7 +44,7 @@ export async function claimDailyGift(userId: string): Promise<DailyGiftReward> {
     throw new AlreadyClaimedError();
   }
 
-  const reward = pickDailyGiftReward(DAILY_GIFT_OPTIONS, Math.random());
+  const reward = pickDailyGiftReward(DAILY_GIFT_CONFIGS, Math.random());
 
   await db.$transaction(async (transaction) => {
     if (reward.type === "coins") {

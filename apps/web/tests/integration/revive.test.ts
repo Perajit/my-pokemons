@@ -17,7 +17,8 @@ import {
   seedItem,
   seedUserItem,
   resetGameplayTables,
-} from "./seed";
+} from "./db-helpers";
+import { makeUserData, makePokemonData, makeItemData } from "@/test/fixtures";
 
 beforeEach(resetGameplayTables);
 afterAll(() => db.$disconnect());
@@ -26,11 +27,13 @@ const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
 
 describe("revivePokemon()", () => {
   it("consumes a Revive, clears faint, restores to 50, sets lastRevivedAt, accumulates downtime", async () => {
-    const user = await seedUser(500);
-    const pokemon = await seedPokemon();
-    const item = await seedItem();
-    await seedUserItem(user.id, item.id, 1);
-    const up = await seedUserPokemon(user.id, pokemon.id, {
+    const user = await seedUser(makeUserData({ coins: 500 }));
+    const pokemon = await seedPokemon(makePokemonData());
+    const item = await seedItem(makeItemData());
+    await seedUserItem({ userId: user.id, itemId: item.id, quantity: 1 });
+    const up = await seedUserPokemon({
+      userId: user.id,
+      pokemonId: pokemon.id,
       faintedAt: new Date(Date.now() - TWO_HOURS_MS),
       currentFullness: 0,
       currentMood: 0,
@@ -57,11 +60,14 @@ describe("revivePokemon()", () => {
   });
 
   it("throws NotFaintedError and consumes nothing when the pokemon is active", async () => {
-    const user = await seedUser(500);
-    const pokemon = await seedPokemon();
-    const item = await seedItem();
-    await seedUserItem(user.id, item.id, 1);
-    const up = await seedUserPokemon(user.id, pokemon.id);
+    const user = await seedUser(makeUserData({ coins: 500 }));
+    const pokemon = await seedPokemon(makePokemonData());
+    const item = await seedItem(makeItemData());
+    await seedUserItem({ userId: user.id, itemId: item.id, quantity: 1 });
+    const up = await seedUserPokemon({
+      userId: user.id,
+      pokemonId: pokemon.id,
+    });
 
     await expect(revivePokemon(user.id, up.id)).rejects.toThrow(
       NotFaintedError,
@@ -70,10 +76,12 @@ describe("revivePokemon()", () => {
   });
 
   it("throws InsufficientItemsError and rolls back when the user has no Revive", async () => {
-    const user = await seedUser(500);
-    const pokemon = await seedPokemon();
-    await seedItem(); // in the catalog, but the user owns none
-    const up = await seedUserPokemon(user.id, pokemon.id, {
+    const user = await seedUser(makeUserData({ coins: 500 }));
+    const pokemon = await seedPokemon(makePokemonData());
+    await seedItem(makeItemData()); // in the catalog, but the user owns none
+    const up = await seedUserPokemon({
+      userId: user.id,
+      pokemonId: pokemon.id,
       faintedAt: new Date(Date.now() - TWO_HOURS_MS),
       currentFullness: 0,
       currentMood: 0,
@@ -88,10 +96,12 @@ describe("revivePokemon()", () => {
   });
 
   it("throws NotOwnedError for another user's pokemon", async () => {
-    const owner = await seedUser(500);
-    const intruder = await seedUser(500);
-    const pokemon = await seedPokemon();
-    const up = await seedUserPokemon(owner.id, pokemon.id, {
+    const owner = await seedUser(makeUserData({ coins: 500 }));
+    const intruder = await seedUser(makeUserData({ coins: 500 }));
+    const pokemon = await seedPokemon(makePokemonData());
+    const up = await seedUserPokemon({
+      userId: owner.id,
+      pokemonId: pokemon.id,
       faintedAt: new Date(),
     });
 

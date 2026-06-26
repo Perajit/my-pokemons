@@ -12,7 +12,7 @@ export type PokemonConfig = {
 };
 
 // The Pokémon catalog — seeded into the DB; the app reads it from the DB at runtime.
-export const POKEMON_CONFIG: readonly PokemonConfig[] = [
+export const POKEMON_CONFIGS: readonly PokemonConfig[] = [
   {
     pokeApiId: 1,
     name: "Bulbasaur",

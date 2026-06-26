@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import {
-  BOND_LEVEL_CONFIG,
+  BOND_LEVEL_CONFIGS,
   BOND_LEVEL_LABELS,
   type BondLevelKey,
 } from "@my-pokemons/config/bond-levels";
@@ -30,7 +30,7 @@ const BOND_LEVEL_VISUALS: Record<
 // timeline by default, overridden to a full-width horizontal track on sm+.
 export function BondLevelSteps({ earned }: { earned: BondLevelKey[] }) {
   const earnedSet = new Set(earned);
-  const sortedLevels = [...BOND_LEVEL_CONFIG].sort((a, b) => a.days - b.days);
+  const sortedLevels = [...BOND_LEVEL_CONFIGS].sort((a, b) => a.days - b.days);
 
   return (
     <ol

@@ -1,25 +1,25 @@
-import { POKEMON_CONFIG } from "@my-pokemons/config/pokemons";
-import { ITEM_CONFIG } from "@my-pokemons/config/items";
+import { POKEMON_CONFIGS } from "@my-pokemons/config/pokemons";
+import { ITEM_CONFIGS } from "@my-pokemons/config/items";
 import { db } from "../src";
 
 async function main() {
-  for (const pokemon of POKEMON_CONFIG) {
+  for (const pokemon of POKEMON_CONFIGS) {
     await db.pokemon.upsert({
       where: { pokeApiId: pokemon.pokeApiId },
       create: pokemon,
       update: pokemon,
     });
   }
-  console.log(`Seeded ${POKEMON_CONFIG.length} Pokémon`);
+  console.log(`Seeded ${POKEMON_CONFIGS.length} Pokémon`);
 
-  for (const item of ITEM_CONFIG) {
+  for (const item of ITEM_CONFIGS) {
     await db.item.upsert({
       where: { key: item.key },
       create: item,
       update: item,
     });
   }
-  console.log(`Seeded ${ITEM_CONFIG.length} items`);
+  console.log(`Seeded ${ITEM_CONFIGS.length} items`);
 }
 
 main()

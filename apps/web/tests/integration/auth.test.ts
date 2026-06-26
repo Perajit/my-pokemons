@@ -18,7 +18,7 @@ vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 import { registerAction } from "@/app/(auth)/register/actions";
 import { authorizeUser } from "@/lib/auth-utils";
 import { db } from "@/lib/db";
-import { resetGameplayTables } from "./seed";
+import { resetGameplayTables } from "./db-helpers";
 
 beforeEach(async () => {
   await resetGameplayTables();

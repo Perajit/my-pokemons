@@ -1,18 +1,10 @@
-import type { PokemonConfig } from "@my-pokemons/config/pokemons";
+import type { Pokemon } from "@my-pokemons/database";
+import { makePokemonData } from "@/test/fixtures";
 
 // Shared test fixture: the one piece used by more than one sibling test file
 // (mappers.test.ts and bond-levels.test.ts). Single-use builders live in
 // their own test file.
-export const basePokemon: PokemonConfig & { id: string } = {
+export const basePokemon: Pokemon = {
+  ...makePokemonData(),
   id: "poke-1",
-  pokeApiId: 25,
-  name: "Pikachu",
-  description: "Electric mouse.",
-  price: 400,
-  fullnessDecayPerHour: 3,
-  moodDecayPerHour: 6,
-  feedFullnessGain: 15,
-  feedCoinReward: 3,
-  playMoodGain: 28,
-  playCoinReward: 5,
 };

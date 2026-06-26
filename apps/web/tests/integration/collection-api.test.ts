@@ -15,7 +15,8 @@ import {
   seedPokemon,
   seedUserPokemon,
   resetGameplayTables,
-} from "./seed";
+} from "./db-helpers";
+import { makeUserData, makePokemonData } from "@/test/fixtures";
 
 const mockAuth = auth as ReturnType<typeof vi.fn>;
 
@@ -35,9 +36,9 @@ describe("GET /api/collection", () => {
   });
 
   it("returns the owner's collection as serialized DTOs", async () => {
-    const user = await seedUser(500);
-    const pokemon = await seedPokemon();
-    await seedUserPokemon(user.id, pokemon.id);
+    const user = await seedUser(makeUserData({ coins: 500 }));
+    const pokemon = await seedPokemon(makePokemonData());
+    await seedUserPokemon({ userId: user.id, pokemonId: pokemon.id });
     mockAuth.mockResolvedValue({ user: { id: user.id } });
 
     const response = await getCollection();
@@ -66,10 +67,13 @@ describe("GET /api/collection/[id]", () => {
   });
 
   it("returns 404 when the pokemon belongs to another user", async () => {
-    const owner = await seedUser(500);
-    const intruder = await seedUser(500);
-    const pokemon = await seedPokemon();
-    const up = await seedUserPokemon(owner.id, pokemon.id);
+    const owner = await seedUser(makeUserData({ coins: 500 }));
+    const intruder = await seedUser(makeUserData({ coins: 500 }));
+    const pokemon = await seedPokemon(makePokemonData());
+    const up = await seedUserPokemon({
+      userId: owner.id,
+      pokemonId: pokemon.id,
+    });
     mockAuth.mockResolvedValue({ user: { id: intruder.id } });
 
     const response = await getCollectionItem(new Request("http://test/x"), {
@@ -80,9 +84,12 @@ describe("GET /api/collection/[id]", () => {
   });
 
   it("returns the owned pokemon as a serialized DTO", async () => {
-    const user = await seedUser(500);
-    const pokemon = await seedPokemon();
-    const up = await seedUserPokemon(user.id, pokemon.id);
+    const user = await seedUser(makeUserData({ coins: 500 }));
+    const pokemon = await seedPokemon(makePokemonData());
+    const up = await seedUserPokemon({
+      userId: user.id,
+      pokemonId: pokemon.id,
+    });
     mockAuth.mockResolvedValue({ user: { id: user.id } });
 
     const response = await getCollectionItem(new Request("http://test/x"), {

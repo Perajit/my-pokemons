@@ -15,17 +15,20 @@ import {
   seedPokemon,
   seedUserPokemon,
   resetGameplayTables,
-} from "./seed";
+} from "./db-helpers";
+import { makeUserData, makePokemonData } from "@/test/fixtures";
 
 beforeEach(resetGameplayTables);
 afterAll(() => db.$disconnect());
 
 describe("getUserCollection()", () => {
   it("returns enriched pokemons with heart and persists decay sync", async () => {
-    const user = await seedUser(500);
-    const pokemon = await seedPokemon();
+    const user = await seedUser(makeUserData({ coins: 500 }));
+    const pokemon = await seedPokemon(makePokemonData());
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-    const up = await seedUserPokemon(user.id, pokemon.id, {
+    const up = await seedUserPokemon({
+      userId: user.id,
+      pokemonId: pokemon.id,
       currentFullness: 60,
       currentMood: 60,
       lastCalculatedAt: oneHourAgo,
@@ -49,14 +52,15 @@ describe("getUserCollection()", () => {
   });
 
   it("faints at the real death time, so the streak/achievements freeze there (not at read time)", async () => {
-    const user = await seedUser(500);
+    const user = await seedUser(makeUserData({ coins: 500 }));
     // Slow, deterministic decay: fullness 100/4 = 25h, mood 100/2 = 50h to zero.
-    const pokemon = await seedPokemon({
-      fullnessDecayPerHour: 4,
-      moodDecayPerHour: 2,
-    });
+    const pokemon = await seedPokemon(
+      makePokemonData({ fullnessDecayPerHour: 4, moodDecayPerHour: 2 }),
+    );
     const sixtyHoursAgo = new Date(Date.now() - 60 * 60 * 60 * 1000);
-    const up = await seedUserPokemon(user.id, pokemon.id, {
+    const up = await seedUserPokemon({
+      userId: user.id,
+      pokemonId: pokemon.id,
       currentFullness: 100,
       currentMood: 100,
       lastCalculatedAt: sixtyHoursAgo,
@@ -81,11 +85,13 @@ describe("getUserCollection()", () => {
   });
 
   it("does not re-sync a pokemon that is already fainted", async () => {
-    const user = await seedUser(500);
-    const pokemon = await seedPokemon();
+    const user = await seedUser(makeUserData({ coins: 500 }));
+    const pokemon = await seedPokemon(makePokemonData());
     const faintedAt = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const oldLastCalc = new Date(Date.now() - 48 * 60 * 60 * 1000);
-    const up = await seedUserPokemon(user.id, pokemon.id, {
+    const up = await seedUserPokemon({
+      userId: user.id,
+      pokemonId: pokemon.id,
       faintedAt,
       currentFullness: 0,
       currentMood: 0,
@@ -100,10 +106,14 @@ describe("getUserCollection()", () => {
   });
 
   it("derives streak achievements from activeStreak without any feed/play", async () => {
-    const user = await seedUser(500);
-    const pokemon = await seedPokemon();
+    const user = await seedUser(makeUserData({ coins: 500 }));
+    const pokemon = await seedPokemon(makePokemonData());
     const eightDaysAgo = new Date(Date.now() - 8 * 24 * 60 * 60 * 1000);
-    await seedUserPokemon(user.id, pokemon.id, { acquiredAt: eightDaysAgo });
+    await seedUserPokemon({
+      userId: user.id,
+      pokemonId: pokemon.id,
+      acquiredAt: eightDaysAgo,
+    });
 
     const result = await getUserCollection(user.id);
 
@@ -116,7 +126,7 @@ describe("getUserCollection()", () => {
   });
 
   it("returns an empty array when the user has no pokemon", async () => {
-    const user = await seedUser(500);
+    const user = await seedUser(makeUserData({ coins: 500 }));
 
     const result = await getUserCollection(user.id);
 
@@ -126,9 +136,12 @@ describe("getUserCollection()", () => {
 
 describe("getUserPokemon()", () => {
   it("returns the enriched pokemon for the owner", async () => {
-    const user = await seedUser(500);
-    const pokemon = await seedPokemon();
-    const up = await seedUserPokemon(user.id, pokemon.id);
+    const user = await seedUser(makeUserData({ coins: 500 }));
+    const pokemon = await seedPokemon(makePokemonData());
+    const up = await seedUserPokemon({
+      userId: user.id,
+      pokemonId: pokemon.id,
+    });
 
     const result = await getUserPokemon(user.id, up.id);
 
@@ -138,10 +151,13 @@ describe("getUserPokemon()", () => {
   });
 
   it("throws NotOwnedError when the pokemon belongs to another user", async () => {
-    const owner = await seedUser(500);
-    const intruder = await seedUser(500);
-    const pokemon = await seedPokemon();
-    const up = await seedUserPokemon(owner.id, pokemon.id);
+    const owner = await seedUser(makeUserData({ coins: 500 }));
+    const intruder = await seedUser(makeUserData({ coins: 500 }));
+    const pokemon = await seedPokemon(makePokemonData());
+    const up = await seedUserPokemon({
+      userId: owner.id,
+      pokemonId: pokemon.id,
+    });
 
     await expect(getUserPokemon(intruder.id, up.id)).rejects.toThrow(
       NotOwnedError,
@@ -149,7 +165,7 @@ describe("getUserPokemon()", () => {
   });
 
   it("throws NotOwnedError when the pokemon does not exist", async () => {
-    const user = await seedUser(500);
+    const user = await seedUser(makeUserData({ coins: 500 }));
 
     await expect(getUserPokemon(user.id, "nonexistent-id")).rejects.toThrow(
       NotOwnedError,
@@ -162,9 +178,12 @@ describe("getUserPokemon()", () => {
 // client (feed/play coin rewards must be top-level, internal fields absent).
 describe("getUserPokemonDto()", () => {
   it("returns the serialization-ready DTO shape", async () => {
-    const user = await seedUser(500);
-    const pokemon = await seedPokemon();
-    const up = await seedUserPokemon(user.id, pokemon.id);
+    const user = await seedUser(makeUserData({ coins: 500 }));
+    const pokemon = await seedPokemon(makePokemonData());
+    const up = await seedUserPokemon({
+      userId: user.id,
+      pokemonId: pokemon.id,
+    });
 
     const dto = await getUserPokemonDto(user.id, up.id);
 
@@ -183,10 +202,13 @@ describe("getUserPokemonDto()", () => {
   });
 
   it("throws NotOwnedError for a pokemon owned by someone else", async () => {
-    const owner = await seedUser(500);
-    const intruder = await seedUser(500);
-    const pokemon = await seedPokemon();
-    const up = await seedUserPokemon(owner.id, pokemon.id);
+    const owner = await seedUser(makeUserData({ coins: 500 }));
+    const intruder = await seedUser(makeUserData({ coins: 500 }));
+    const pokemon = await seedPokemon(makePokemonData());
+    const up = await seedUserPokemon({
+      userId: owner.id,
+      pokemonId: pokemon.id,
+    });
 
     await expect(getUserPokemonDto(intruder.id, up.id)).rejects.toThrow(
       NotOwnedError,
@@ -196,9 +218,9 @@ describe("getUserPokemonDto()", () => {
 
 describe("getUserCollectionDto()", () => {
   it("returns an array of serialization-ready DTOs", async () => {
-    const user = await seedUser(500);
-    const pokemon = await seedPokemon();
-    await seedUserPokemon(user.id, pokemon.id);
+    const user = await seedUser(makeUserData({ coins: 500 }));
+    const pokemon = await seedPokemon(makePokemonData());
+    await seedUserPokemon({ userId: user.id, pokemonId: pokemon.id });
 
     const collection = await getUserCollectionDto(user.id);
 
@@ -212,7 +234,7 @@ describe("getUserCollectionDto()", () => {
   });
 
   it("returns an empty array when the user owns nothing", async () => {
-    const user = await seedUser(500);
+    const user = await seedUser(makeUserData({ coins: 500 }));
     expect(await getUserCollectionDto(user.id)).toEqual([]);
   });
 });

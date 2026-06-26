@@ -7,14 +7,15 @@ import { AlreadyClaimedError } from "@/services/errors";
 import { getDailyGiftStatusDto, claimDailyGift } from "@/services/user";
 import { getUserCoins } from "@/services/user";
 import { getUserItemQuantity } from "@/services/inventory";
-import { seedUser, seedItem, resetGameplayTables } from "./seed";
+import { seedUser, seedItem, resetGameplayTables } from "./db-helpers";
+import { makeUserData, makeItemData } from "@/test/fixtures";
 
 beforeEach(resetGameplayTables);
 afterAll(() => db.$disconnect());
 
 describe("getDailyGiftStatusDto()", () => {
   it("returns availableNow=true when the user has never claimed", async () => {
-    const user = await seedUser(0);
+    const user = await seedUser(makeUserData({ coins: 0 }));
 
     const status = await getDailyGiftStatusDto(user.id);
 
@@ -23,7 +24,7 @@ describe("getDailyGiftStatusDto()", () => {
   });
 
   it("returns availableNow=false and nextGiftAvailableAt when claimed today", async () => {
-    const user = await seedUser(0);
+    const user = await seedUser(makeUserData({ coins: 0 }));
     await db.user.update({
       where: { id: user.id },
       data: { lastDailyGiftClaimedAt: new Date() },
@@ -40,7 +41,7 @@ describe("getDailyGiftStatusDto()", () => {
   });
 
   it("returns availableNow=true when lastDailyGiftClaimedAt was yesterday", async () => {
-    const user = await seedUser(0);
+    const user = await seedUser(makeUserData({ coins: 0 }));
     const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
     yesterday.setUTCHours(0, 0, 0, 0); // put it firmly in the previous UTC day
     await db.user.update({
@@ -59,11 +60,11 @@ describe("claimDailyGift()", () => {
   // catalog row must exist — otherwise grantItem throws an opaque "Item not
   // found" instead of the test's real assertion.
   beforeEach(async () => {
-    await seedItem();
+    await seedItem(makeItemData());
   });
 
   it("credits coins when the reward is coins (mocked random)", async () => {
-    const user = await seedUser(100);
+    const user = await seedUser(makeUserData({ coins: 100 }));
     // random=0 → first bucket → 5 coins
     vi.spyOn(Math, "random").mockReturnValue(0);
 
@@ -79,7 +80,7 @@ describe("claimDailyGift()", () => {
   });
 
   it("grants a Revive item when the reward is an item (mocked random)", async () => {
-    const user = await seedUser(0);
+    const user = await seedUser(makeUserData({ coins: 0 }));
     // random=0.97 → fourth bucket → REVIVE item
     vi.spyOn(Math, "random").mockReturnValue(0.97);
 
@@ -91,7 +92,7 @@ describe("claimDailyGift()", () => {
   });
 
   it("throws AlreadyClaimedError on a second claim the same UTC day", async () => {
-    const user = await seedUser(0);
+    const user = await seedUser(makeUserData({ coins: 0 }));
     vi.spyOn(Math, "random").mockReturnValue(0);
 
     await claimDailyGift(user.id);

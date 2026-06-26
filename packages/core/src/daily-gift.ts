@@ -1,5 +1,5 @@
 import type {
-  DailyGiftOption,
+  DailyGiftConfig,
   DailyGiftReward,
 } from "@my-pokemons/config/daily-gift";
 
@@ -24,7 +24,7 @@ export function nextGiftAvailableAt(lastClaimedAt: Date): Date {
 
 // Weighted random pick; caller injects `random` (0–1) for testability.
 export function pickDailyGiftReward(
-  options: readonly DailyGiftOption[],
+  options: readonly DailyGiftConfig[],
   random: number,
 ): DailyGiftReward {
   const totalWeight = options.reduce((sum, option) => sum + option.weight, 0);

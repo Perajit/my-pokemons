@@ -10,16 +10,20 @@ import {
   seedPokemon,
   seedUserPokemon,
   resetGameplayTables,
-} from "./seed";
+} from "./db-helpers";
+import { makeUserData, makePokemonData } from "@/test/fixtures";
 
 beforeEach(resetGameplayTables);
 afterAll(() => db.$disconnect());
 
 describe("renamePokemon()", () => {
   it("persists the new nickname for the owner", async () => {
-    const user = await seedUser(0);
-    const pokemon = await seedPokemon();
-    const owned = await seedUserPokemon(user.id, pokemon.id);
+    const user = await seedUser(makeUserData({ coins: 0 }));
+    const pokemon = await seedPokemon(makePokemonData());
+    const owned = await seedUserPokemon({
+      userId: user.id,
+      pokemonId: pokemon.id,
+    });
 
     await renamePokemon(user.id, owned.id, "Sparky");
 
@@ -28,9 +32,11 @@ describe("renamePokemon()", () => {
   });
 
   it("renames a fainted Pokémon (no active-state restriction)", async () => {
-    const user = await seedUser(0);
-    const pokemon = await seedPokemon();
-    const owned = await seedUserPokemon(user.id, pokemon.id, {
+    const user = await seedUser(makeUserData({ coins: 0 }));
+    const pokemon = await seedPokemon(makePokemonData());
+    const owned = await seedUserPokemon({
+      userId: user.id,
+      pokemonId: pokemon.id,
       faintedAt: new Date(),
       currentFullness: 0,
       currentMood: 0,
@@ -43,10 +49,13 @@ describe("renamePokemon()", () => {
   });
 
   it("throws NotOwnedError and leaves the nickname untouched for a non-owner", async () => {
-    const owner = await seedUser(0);
-    const intruder = await seedUser(0);
-    const pokemon = await seedPokemon();
-    const owned = await seedUserPokemon(owner.id, pokemon.id);
+    const owner = await seedUser(makeUserData({ coins: 0 }));
+    const intruder = await seedUser(makeUserData({ coins: 0 }));
+    const pokemon = await seedPokemon(makePokemonData());
+    const owned = await seedUserPokemon({
+      userId: owner.id,
+      pokemonId: pokemon.id,
+    });
 
     await expect(
       renamePokemon(intruder.id, owned.id, "Sparky"),

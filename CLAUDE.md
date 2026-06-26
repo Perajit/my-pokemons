@@ -59,7 +59,7 @@ export const BOND_LEVEL_LABELS: Record<BondLevelKey, string> = {
 
 export type BondLevelConfig = { key: BondLevelKey; days: number; coinReward: number };
 
-export const BOND_LEVEL_CONFIG: readonly BondLevelConfig[] = [
+export const BOND_LEVEL_CONFIGS: readonly BondLevelConfig[] = [
   { key: "BOND_LEVEL_0D",   days: 0,   coinReward: 0 },   // display-only welcome badge
   { key: "BOND_LEVEL_7D",   days: 7,   coinReward: 15 },
   { key: "BOND_LEVEL_30D",  days: 30,  coinReward: 40 },

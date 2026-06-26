@@ -10,7 +10,8 @@ import {
   seedPokemon,
   seedUserPokemon,
   resetGameplayTables,
-} from "./seed";
+} from "./db-helpers";
+import { makeUserData, makePokemonData } from "@/test/fixtures";
 
 beforeEach(resetGameplayTables);
 afterAll(() => db.$disconnect());
@@ -19,9 +20,11 @@ const eightDaysAgo = new Date(Date.now() - 8 * 24 * 60 * 60 * 1000);
 
 describe("feedPokemon()", () => {
   it("applies feedFullnessGain, sets lastFedAt, and credits feedCoinReward", async () => {
-    const user = await seedUser(100);
-    const pokemon = await seedPokemon();
-    const up = await seedUserPokemon(user.id, pokemon.id, {
+    const user = await seedUser(makeUserData({ coins: 100 }));
+    const pokemon = await seedPokemon(makePokemonData());
+    const up = await seedUserPokemon({
+      userId: user.id,
+      pokemonId: pokemon.id,
       currentFullness: 50,
       currentMood: 50,
       lastCalculatedAt: new Date(), // no decay
@@ -39,9 +42,11 @@ describe("feedPokemon()", () => {
   });
 
   it("awards BOND_LEVEL_7D when feeding a pokemon acquired 8 days ago (day-0 welcome is display-only)", async () => {
-    const user = await seedUser(100);
-    const pokemon = await seedPokemon();
-    const up = await seedUserPokemon(user.id, pokemon.id, {
+    const user = await seedUser(makeUserData({ coins: 100 }));
+    const pokemon = await seedPokemon(makePokemonData());
+    const up = await seedUserPokemon({
+      userId: user.id,
+      pokemonId: pokemon.id,
       acquiredAt: eightDaysAgo,
     });
 
@@ -70,9 +75,11 @@ describe("feedPokemon()", () => {
   });
 
   it("does not re-credit bond levels on a second feed after the cooldown", async () => {
-    const user = await seedUser(100);
-    const pokemon = await seedPokemon();
-    const up = await seedUserPokemon(user.id, pokemon.id, {
+    const user = await seedUser(makeUserData({ coins: 100 }));
+    const pokemon = await seedPokemon(makePokemonData());
+    const up = await seedUserPokemon({
+      userId: user.id,
+      pokemonId: pokemon.id,
       acquiredAt: eightDaysAgo,
     });
 
@@ -100,10 +107,13 @@ describe("feedPokemon()", () => {
   });
 
   it("throws NotOwnedError when feeding another user's pokemon", async () => {
-    const owner = await seedUser(100);
-    const intruder = await seedUser(100);
-    const pokemon = await seedPokemon();
-    const up = await seedUserPokemon(owner.id, pokemon.id);
+    const owner = await seedUser(makeUserData({ coins: 100 }));
+    const intruder = await seedUser(makeUserData({ coins: 100 }));
+    const pokemon = await seedPokemon(makePokemonData());
+    const up = await seedUserPokemon({
+      userId: owner.id,
+      pokemonId: pokemon.id,
+    });
 
     await expect(feedPokemon(intruder.id, up.id)).rejects.toThrow(
       NotOwnedError,
@@ -111,9 +121,11 @@ describe("feedPokemon()", () => {
   });
 
   it("throws FaintedError when the pokemon is already fainted and credits no coins", async () => {
-    const user = await seedUser(100);
-    const pokemon = await seedPokemon();
-    const up = await seedUserPokemon(user.id, pokemon.id, {
+    const user = await seedUser(makeUserData({ coins: 100 }));
+    const pokemon = await seedPokemon(makePokemonData());
+    const up = await seedUserPokemon({
+      userId: user.id,
+      pokemonId: pokemon.id,
       faintedAt: new Date(),
       currentFullness: 0,
       currentMood: 0,
@@ -126,9 +138,11 @@ describe("feedPokemon()", () => {
   });
 
   it("throws CooldownError on a second immediate feed and credits coins only once", async () => {
-    const user = await seedUser(100);
-    const pokemon = await seedPokemon();
-    const up = await seedUserPokemon(user.id, pokemon.id, {
+    const user = await seedUser(makeUserData({ coins: 100 }));
+    const pokemon = await seedPokemon(makePokemonData());
+    const up = await seedUserPokemon({
+      userId: user.id,
+      pokemonId: pokemon.id,
       lastCalculatedAt: new Date(),
     });
 
@@ -140,9 +154,11 @@ describe("feedPokemon()", () => {
   });
 
   it("two concurrent feeds → exactly one succeeds, one CooldownError, coin credited once", async () => {
-    const user = await seedUser(100);
-    const pokemon = await seedPokemon();
-    const up = await seedUserPokemon(user.id, pokemon.id, {
+    const user = await seedUser(makeUserData({ coins: 100 }));
+    const pokemon = await seedPokemon(makePokemonData());
+    const up = await seedUserPokemon({
+      userId: user.id,
+      pokemonId: pokemon.id,
       lastCalculatedAt: new Date(),
     });
 
@@ -163,10 +179,12 @@ describe("feedPokemon()", () => {
   });
 
   it("refuses the feed and rolls back when decay during the feed would faint the pokemon", async () => {
-    const user = await seedUser(100);
-    const pokemon = await seedPokemon();
+    const user = await seedUser(makeUserData({ coins: 100 }));
+    const pokemon = await seedPokemon(makePokemonData());
     const longAgo = new Date(Date.now() - 100 * 60 * 60 * 1000);
-    const up = await seedUserPokemon(user.id, pokemon.id, {
+    const up = await seedUserPokemon({
+      userId: user.id,
+      pokemonId: pokemon.id,
       currentFullness: 1,
       currentMood: 1,
       lastCalculatedAt: longAgo,
@@ -185,9 +203,11 @@ describe("feedPokemon()", () => {
   });
 
   it("credits no coins when the pokemon's feed reward is zero", async () => {
-    const user = await seedUser(100);
-    const pokemon = await seedPokemon({ feedCoinReward: 0 });
-    const up = await seedUserPokemon(user.id, pokemon.id, {
+    const user = await seedUser(makeUserData({ coins: 100 }));
+    const pokemon = await seedPokemon(makePokemonData({ feedCoinReward: 0 }));
+    const up = await seedUserPokemon({
+      userId: user.id,
+      pokemonId: pokemon.id,
       lastCalculatedAt: new Date(),
     });
 

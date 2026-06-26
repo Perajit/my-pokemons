@@ -10,16 +10,19 @@ import {
   seedPokemon,
   seedUserPokemon,
   resetGameplayTables,
-} from "./seed";
+} from "./db-helpers";
+import { makeUserData, makePokemonData } from "@/test/fixtures";
 
 beforeEach(resetGameplayTables);
 afterAll(() => db.$disconnect());
 
 describe("playWithPokemon()", () => {
   it("applies playMoodGain, sets lastPlayedAt, and credits playCoinReward", async () => {
-    const user = await seedUser(100);
-    const pokemon = await seedPokemon();
-    const up = await seedUserPokemon(user.id, pokemon.id, {
+    const user = await seedUser(makeUserData({ coins: 100 }));
+    const pokemon = await seedPokemon(makePokemonData());
+    const up = await seedUserPokemon({
+      userId: user.id,
+      pokemonId: pokemon.id,
       currentFullness: 50,
       currentMood: 50,
       lastCalculatedAt: new Date(),
@@ -37,10 +40,12 @@ describe("playWithPokemon()", () => {
   });
 
   it("awards BOND_LEVEL_7D when playing with a pokemon acquired 7 days ago", async () => {
-    const user = await seedUser(100);
-    const pokemon = await seedPokemon();
+    const user = await seedUser(makeUserData({ coins: 100 }));
+    const pokemon = await seedPokemon(makePokemonData());
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const up = await seedUserPokemon(user.id, pokemon.id, {
+    const up = await seedUserPokemon({
+      userId: user.id,
+      pokemonId: pokemon.id,
       acquiredAt: sevenDaysAgo,
     });
 
@@ -66,10 +71,13 @@ describe("playWithPokemon()", () => {
   });
 
   it("throws NotOwnedError when playing with another user's pokemon", async () => {
-    const owner = await seedUser(100);
-    const intruder = await seedUser(100);
-    const pokemon = await seedPokemon();
-    const up = await seedUserPokemon(owner.id, pokemon.id);
+    const owner = await seedUser(makeUserData({ coins: 100 }));
+    const intruder = await seedUser(makeUserData({ coins: 100 }));
+    const pokemon = await seedPokemon(makePokemonData());
+    const up = await seedUserPokemon({
+      userId: owner.id,
+      pokemonId: pokemon.id,
+    });
 
     await expect(playWithPokemon(intruder.id, up.id)).rejects.toThrow(
       NotOwnedError,
@@ -77,9 +85,11 @@ describe("playWithPokemon()", () => {
   });
 
   it("throws FaintedError when the pokemon is already fainted and credits no coins", async () => {
-    const user = await seedUser(100);
-    const pokemon = await seedPokemon();
-    const up = await seedUserPokemon(user.id, pokemon.id, {
+    const user = await seedUser(makeUserData({ coins: 100 }));
+    const pokemon = await seedPokemon(makePokemonData());
+    const up = await seedUserPokemon({
+      userId: user.id,
+      pokemonId: pokemon.id,
       faintedAt: new Date(),
       currentFullness: 0,
       currentMood: 0,
@@ -92,9 +102,11 @@ describe("playWithPokemon()", () => {
   });
 
   it("throws CooldownError on a second immediate play and credits coins only once", async () => {
-    const user = await seedUser(100);
-    const pokemon = await seedPokemon();
-    const up = await seedUserPokemon(user.id, pokemon.id, {
+    const user = await seedUser(makeUserData({ coins: 100 }));
+    const pokemon = await seedPokemon(makePokemonData());
+    const up = await seedUserPokemon({
+      userId: user.id,
+      pokemonId: pokemon.id,
       lastCalculatedAt: new Date(),
     });
 
@@ -108,10 +120,12 @@ describe("playWithPokemon()", () => {
   });
 
   it("refuses the play and rolls back when decay during the play would faint the pokemon", async () => {
-    const user = await seedUser(100);
-    const pokemon = await seedPokemon();
+    const user = await seedUser(makeUserData({ coins: 100 }));
+    const pokemon = await seedPokemon(makePokemonData());
     const longAgo = new Date(Date.now() - 100 * 60 * 60 * 1000);
-    const up = await seedUserPokemon(user.id, pokemon.id, {
+    const up = await seedUserPokemon({
+      userId: user.id,
+      pokemonId: pokemon.id,
       currentFullness: 1,
       currentMood: 1,
       lastCalculatedAt: longAgo,

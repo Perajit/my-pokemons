@@ -9,14 +9,20 @@ import {
   getUserItemQuantity,
 } from "@/services/inventory";
 import { NotFoundError, InsufficientItemsError } from "@/services/errors";
-import { seedUser, seedItem, seedUserItem, resetGameplayTables } from "./seed";
+import {
+  seedUser,
+  seedItem,
+  seedUserItem,
+  resetGameplayTables,
+} from "./db-helpers";
+import { makeUserData, makeItemData } from "@/test/fixtures";
 
 beforeEach(resetGameplayTables);
 afterAll(() => db.$disconnect());
 
 describe("grantItem()", () => {
   it("throws NotFoundError for an unknown item key", async () => {
-    const user = await seedUser(500);
+    const user = await seedUser(makeUserData({ coins: 500 }));
     await expect(
       db.$transaction((transaction) =>
         grantItem(transaction, user.id, "REVIVE", 1),
@@ -25,8 +31,8 @@ describe("grantItem()", () => {
   });
 
   it("creates the inventory row on first grant, then increments it", async () => {
-    const user = await seedUser(500);
-    await seedItem();
+    const user = await seedUser(makeUserData({ coins: 500 }));
+    await seedItem(makeItemData());
 
     await db.$transaction((transaction) =>
       grantItem(transaction, user.id, "REVIVE", 2),
@@ -43,7 +49,7 @@ describe("grantItem()", () => {
 
 describe("consumeItem()", () => {
   it("throws NotFoundError for an unknown item key", async () => {
-    const user = await seedUser(500);
+    const user = await seedUser(makeUserData({ coins: 500 }));
     await expect(
       db.$transaction((transaction) =>
         consumeItem(transaction, user.id, "REVIVE"),
@@ -52,9 +58,9 @@ describe("consumeItem()", () => {
   });
 
   it("decrements the held quantity, and throws InsufficientItemsError at zero", async () => {
-    const user = await seedUser(500);
-    const item = await seedItem();
-    await seedUserItem(user.id, item.id, 1);
+    const user = await seedUser(makeUserData({ coins: 500 }));
+    const item = await seedItem(makeItemData());
+    await seedUserItem({ userId: user.id, itemId: item.id, quantity: 1 });
 
     await db.$transaction((transaction) =>
       consumeItem(transaction, user.id, "REVIVE"),
@@ -71,16 +77,16 @@ describe("consumeItem()", () => {
 
 describe("getUserItemQuantity()", () => {
   it("returns 0 when the user has never owned the item", async () => {
-    const user = await seedUser(500);
-    await seedItem();
+    const user = await seedUser(makeUserData({ coins: 500 }));
+    await seedItem(makeItemData());
 
     expect(await getUserItemQuantity(user.id, "REVIVE")).toBe(0);
   });
 
   it("returns the owned quantity when the user has the item", async () => {
-    const user = await seedUser(500);
-    const item = await seedItem();
-    await seedUserItem(user.id, item.id, 4);
+    const user = await seedUser(makeUserData({ coins: 500 }));
+    const item = await seedItem(makeItemData());
+    await seedUserItem({ userId: user.id, itemId: item.id, quantity: 4 });
 
     expect(await getUserItemQuantity(user.id, "REVIVE")).toBe(4);
   });

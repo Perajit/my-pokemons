@@ -18,22 +18,23 @@ import {
   seedItem,
   seedUserItem,
   resetGameplayTables,
-} from "./seed";
+} from "./db-helpers";
+import { makeUserData, makePokemonData, makeItemData } from "@/test/fixtures";
 
 beforeEach(resetGameplayTables);
 afterAll(() => db.$disconnect());
 
 describe("buyPokemon()", () => {
   it("throws NotFoundError for unknown pokemonId", async () => {
-    const user = await seedUser(500);
+    const user = await seedUser(makeUserData({ coins: 500 }));
     await expect(buyPokemon(user.id, "does-not-exist")).rejects.toThrow(
       NotFoundError,
     );
   });
 
   it("throws InsufficientCoinsError when coins are too low, no DB change", async () => {
-    const user = await seedUser(100);
-    const pokemon = await seedPokemon();
+    const user = await seedUser(makeUserData({ coins: 100 }));
+    const pokemon = await seedPokemon(makePokemonData());
 
     await expect(buyPokemon(user.id, pokemon.id)).rejects.toThrow(
       InsufficientCoinsError,
@@ -45,8 +46,8 @@ describe("buyPokemon()", () => {
   });
 
   it("deducts coins and creates UserPokemon on success", async () => {
-    const user = await seedUser(500);
-    const pokemon = await seedPokemon({ price: 400 });
+    const user = await seedUser(makeUserData({ coins: 500 }));
+    const pokemon = await seedPokemon(makePokemonData());
 
     await buyPokemon(user.id, pokemon.id);
 
@@ -62,8 +63,8 @@ describe("buyPokemon()", () => {
   });
 
   it("prevents a race: concurrent buys with exactly enough coins succeed once", async () => {
-    const user = await seedUser(400);
-    const pokemon = await seedPokemon({ price: 400 });
+    const user = await seedUser(makeUserData({ coins: 400 }));
+    const pokemon = await seedPokemon(makePokemonData());
 
     const results = await Promise.allSettled([
       buyPokemon(user.id, pokemon.id),
@@ -85,13 +86,13 @@ describe("buyPokemon()", () => {
 
 describe("buyItem()", () => {
   it("throws NotFoundError for an unknown item key", async () => {
-    const user = await seedUser(500);
+    const user = await seedUser(makeUserData({ coins: 500 }));
     await expect(buyItem(user.id, "REVIVE")).rejects.toThrow(NotFoundError);
   });
 
   it("throws InsufficientCoinsError and changes nothing when coins are too low", async () => {
-    const user = await seedUser(100);
-    await seedItem({ price: 150 });
+    const user = await seedUser(makeUserData({ coins: 100 }));
+    await seedItem(makeItemData({ price: 150 }));
 
     await expect(buyItem(user.id, "REVIVE")).rejects.toThrow(
       InsufficientCoinsError,
@@ -103,8 +104,8 @@ describe("buyItem()", () => {
   });
 
   it("deducts coins and grants one item on success", async () => {
-    const user = await seedUser(500);
-    await seedItem({ price: 150 });
+    const user = await seedUser(makeUserData({ coins: 500 }));
+    await seedItem(makeItemData({ price: 150 }));
 
     await buyItem(user.id, "REVIVE");
 
@@ -114,8 +115,8 @@ describe("buyItem()", () => {
   });
 
   it("increments quantity when buying the same item again (upsert, not a new row)", async () => {
-    const user = await seedUser(500);
-    await seedItem({ price: 150 });
+    const user = await seedUser(makeUserData({ coins: 500 }));
+    await seedItem(makeItemData({ price: 150 }));
 
     await buyItem(user.id, "REVIVE");
     await buyItem(user.id, "REVIVE");
@@ -127,8 +128,8 @@ describe("buyItem()", () => {
   });
 
   it("prevents a race: two concurrent buys with exactly enough coins succeed once", async () => {
-    const user = await seedUser(150);
-    await seedItem({ price: 150 });
+    const user = await seedUser(makeUserData({ coins: 150 }));
+    await seedItem(makeItemData({ price: 150 }));
 
     const results = await Promise.allSettled([
       buyItem(user.id, "REVIVE"),
@@ -150,8 +151,8 @@ describe("buyItem()", () => {
 
 describe("getShopPokemonsDto()", () => {
   it("returns the catalog with the user's owned count (0 when none)", async () => {
-    const user = await seedUser(500);
-    const pokemon = await seedPokemon({ price: 400 });
+    const user = await seedUser(makeUserData({ coins: 500 }));
+    const pokemon = await seedPokemon(makePokemonData());
 
     const before = await getShopPokemonsDto(user.id);
     expect(before).toHaveLength(1);
@@ -170,8 +171,8 @@ describe("getShopPokemonsDto()", () => {
       moodDecayPerHour: 6,
     });
 
-    await seedUserPokemon(user.id, pokemon.id);
-    await seedUserPokemon(user.id, pokemon.id);
+    await seedUserPokemon({ userId: user.id, pokemonId: pokemon.id });
+    await seedUserPokemon({ userId: user.id, pokemonId: pokemon.id });
 
     const after = await getShopPokemonsDto(user.id);
     expect(after[0].userOwnedCount).toBe(2);
@@ -180,14 +181,14 @@ describe("getShopPokemonsDto()", () => {
 
 describe("getShopItemsDto()", () => {
   it("returns the catalog with the user's owned count (0 when none)", async () => {
-    const user = await seedUser(500);
-    const item = await seedItem();
+    const user = await seedUser(makeUserData({ coins: 500 }));
+    const item = await seedItem(makeItemData());
 
     const before = await getShopItemsDto(user.id);
     expect(before).toHaveLength(1);
     expect(before[0]).toMatchObject({ key: "REVIVE", userOwnedCount: 0 });
 
-    await seedUserItem(user.id, item.id, 3);
+    await seedUserItem({ userId: user.id, itemId: item.id, quantity: 3 });
 
     const after = await getShopItemsDto(user.id);
     expect(after[0].userOwnedCount).toBe(3);

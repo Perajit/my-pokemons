@@ -4,7 +4,7 @@ import {
   nextGiftAvailableAt,
   pickDailyGiftReward,
 } from "./daily-gift";
-import { DAILY_GIFT_OPTIONS } from "@my-pokemons/config/daily-gift";
+import { DAILY_GIFT_CONFIGS } from "@my-pokemons/config/daily-gift";
 
 describe("isDailyGiftAvailable()", () => {
   it("returns true when lastClaimedAt is null (never claimed)", () => {
@@ -52,7 +52,7 @@ describe("nextGiftAvailableAt()", () => {
 });
 
 describe("pickDailyGiftReward()", () => {
-  // DAILY_GIFT_OPTIONS weights: 60 / 20 / 9 / 9 / 2 (sum = 100)
+  // DAILY_GIFT_CONFIGS weights: 60 / 20 / 9 / 9 / 2 (sum = 100)
   // random=0.00 → first bucket (weight 60):  5 coins
   // random=0.65 → second bucket (weight 20): 10 coins
   // random=0.88 → third bucket (weight 9):   50 coins
@@ -60,27 +60,27 @@ describe("pickDailyGiftReward()", () => {
   // random=1.00 → last-option fallback:      100 coins
 
   it("picks 5 coins when random is at the very start", () => {
-    const reward = pickDailyGiftReward(DAILY_GIFT_OPTIONS, 0);
+    const reward = pickDailyGiftReward(DAILY_GIFT_CONFIGS, 0);
     expect(reward).toEqual({ type: "coins", amount: 5 });
   });
 
   it("picks 10 coins when random crosses into the second bucket", () => {
-    const reward = pickDailyGiftReward(DAILY_GIFT_OPTIONS, 0.65);
+    const reward = pickDailyGiftReward(DAILY_GIFT_CONFIGS, 0.65);
     expect(reward).toEqual({ type: "coins", amount: 10 });
   });
 
   it("picks 50 coins when random crosses into the third bucket", () => {
-    const reward = pickDailyGiftReward(DAILY_GIFT_OPTIONS, 0.88);
+    const reward = pickDailyGiftReward(DAILY_GIFT_CONFIGS, 0.88);
     expect(reward).toEqual({ type: "coins", amount: 50 });
   });
 
   it("picks a Revive item when random crosses into the fourth bucket", () => {
-    const reward = pickDailyGiftReward(DAILY_GIFT_OPTIONS, 0.97);
+    const reward = pickDailyGiftReward(DAILY_GIFT_CONFIGS, 0.97);
     expect(reward).toEqual({ type: "item", itemKey: "REVIVE", quantity: 1 });
   });
 
   it("falls through to the last option when random is exactly 1", () => {
-    const reward = pickDailyGiftReward(DAILY_GIFT_OPTIONS, 1);
+    const reward = pickDailyGiftReward(DAILY_GIFT_CONFIGS, 1);
     expect(reward).toEqual({ type: "coins", amount: 100 });
   });
 });
