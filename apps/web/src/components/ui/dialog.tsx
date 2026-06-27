@@ -43,18 +43,38 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  mobileFullScreen = false,
   ...props
 }: DialogPrimitive.Popup.Props & {
   showCloseButton?: boolean;
+  mobileFullScreen?: boolean;
 }) {
+  const mobileVariant = mobileFullScreen
+    ? cn(
+        "top-0 left-0 translate-x-0 translate-y-0 sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2",
+        "h-svh sm:h-auto sm:max-h-[calc(100svh-2rem)]",
+        "w-screen max-w-none sm:max-w-md",
+        "rounded-none sm:rounded-xl",
+      )
+    : cn(
+        "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
+        "max-h-[calc(100svh-2rem)]",
+        "w-full max-w-[calc(100%-2rem)] sm:max-w-sm",
+        "rounded-xl",
+      );
+
   return (
     <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          "flex flex-col gap-4",
+          "fixed z-50 overflow-hidden p-4",
+          "outline-none ring-1 ring-foreground/10 text-sm text-popover-foreground bg-popover",
+          "duration-100 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           className,
+          mobileVariant,
         )}
         {...props}
       >
@@ -83,7 +103,7 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex flex-col gap-2", className)}
+      className={cn("flex flex-col gap-2 shrink-0", className)}
       {...props}
     />
   );
