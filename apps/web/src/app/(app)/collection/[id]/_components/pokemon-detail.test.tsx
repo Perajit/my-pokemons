@@ -19,12 +19,11 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-vi.mock("swr", () => ({
-  default: (
-    _key: string,
-    _fetcher: unknown,
-    options: { fallbackData: unknown },
-  ) => ({ data: options.fallbackData, mutate: vi.fn() }),
+// Mock the polling hook (the component's data boundary): echo the initial prop
+// back as pokemon, no SWR/network. Polling config is covered by
+// use-polled-collection.test.tsx.
+vi.mock("@/hooks/use-polled-collection", () => ({
+  usePolledUserPokemon: vi.fn(),
 }));
 
 vi.mock("sonner", () => ({
@@ -43,6 +42,7 @@ vi.mock("../../actions", () => ({
 }));
 
 import type { UserPokemonDto } from "@/services/user-pokemon";
+import { usePolledUserPokemon } from "@/hooks/use-polled-collection";
 import { toast } from "sonner";
 import {
   feedAction,
@@ -56,6 +56,7 @@ import { setup } from "@/test/render";
 const mockFeed = feedAction as ReturnType<typeof vi.fn>;
 const mockPlay = playAction as ReturnType<typeof vi.fn>;
 const mockRevive = reviveAction as ReturnType<typeof vi.fn>;
+const mockUsePolledUserPokemon = vi.mocked(usePolledUserPokemon);
 
 function makePokemon(overrides: Partial<UserPokemonDto> = {}): UserPokemonDto {
   return {
@@ -86,6 +87,10 @@ function setupComponent(props: {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockUsePolledUserPokemon.mockImplementation((initial) => ({
+    pokemon: initial,
+    mutate: vi.fn(),
+  }));
 });
 
 describe("PokemonDetail", () => {
@@ -372,6 +377,28 @@ describe("PokemonDetail", () => {
 
     expect(mockRevive).toHaveBeenCalledWith("up-1");
     expect(toast.success).toHaveBeenCalledWith("Pikachu was revived!");
+  });
+
+  it("toasts the error message on a failed Revive click", async () => {
+    mockRevive.mockResolvedValue({
+      ok: false,
+      error: {
+        type: "GAMEPLAY",
+        code: "NO_REVIVE",
+        message: "No Revive item available",
+      },
+    });
+    const { user } = setupComponent({
+      initial: faintedRevive(),
+      reviveCount: 1,
+    });
+
+    await act(async () => {
+      await user.click(screen.getByRole("button", { name: /revive/i }));
+    });
+
+    expect(mockRevive).toHaveBeenCalledWith("up-1");
+    expect(toast.error).toHaveBeenCalledWith("No Revive item available");
   });
 
   it("disables Revive and links to the shop when no Revive is owned", () => {

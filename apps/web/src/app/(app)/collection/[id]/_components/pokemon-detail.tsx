@@ -4,14 +4,13 @@ import { FaintedBadge } from "@/app/(app)/collection/_components/fainted-badge";
 import { HeartStatus } from "@/app/(app)/collection/_components/heart-status";
 import { PokemonSprite } from "@/components/pokemon-sprite";
 import { Card, CardContent } from "@/components/ui/card";
-import { apiFetcher } from "@/lib/client-fetcher";
+import { usePolledUserPokemon } from "@/hooks/use-polled-collection";
 import type { UserPokemonDto } from "@/services/user-pokemon";
 import { ChevronLeft, Cookie, Hand } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { toast } from "sonner";
-import useSWR from "swr";
 import { feedAction, playAction, reviveAction } from "../../actions";
 import { ActionButton } from "./action-button";
 import { ActiveSteak } from "./active-streak";
@@ -20,10 +19,6 @@ import { notifyGameplayEvents } from "./gameplay-event-toasts";
 import { RenamePokemonDialog } from "./rename-pokemon-dialog";
 import { ReviveButton } from "./revive-button";
 import { StatusBlock } from "./status-block";
-
-const POLL_INTERVAL_MS =
-  parseInt(process.env.NEXT_PUBLIC_POLLING_INTERVAL_SECONDS ?? "300", 10) *
-  1000;
 
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
   month: "short",
@@ -39,15 +34,7 @@ export function PokemonDetail({
   reviveCount?: number;
 }) {
   const router = useRouter();
-  const { data: pokemon = initial, mutate } = useSWR<UserPokemonDto>(
-    `/api/collection/${initial.id}`,
-    apiFetcher,
-    {
-      fallbackData: initial,
-      refreshInterval: POLL_INTERVAL_MS,
-      revalidateOnFocus: true,
-    },
-  );
+  const { pokemon, mutate } = usePolledUserPokemon(initial);
 
   const [feedPending, startFeedTransition] = useTransition();
   const [playPending, startPlayTransition] = useTransition();

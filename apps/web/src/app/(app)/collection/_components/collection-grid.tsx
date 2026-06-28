@@ -2,15 +2,10 @@
 
 import { Pokeball } from "@/components/pokeball";
 import { buttonVariants } from "@/components/ui/button";
-import { apiFetcher } from "@/lib/client-fetcher";
+import { usePolledCollection } from "@/hooks/use-polled-collection";
 import type { UserPokemonDto } from "@/services/user-pokemon";
 import Link from "next/link";
-import useSWR from "swr";
 import { PokemonCard } from "./pokemon-card";
-
-const POLL_INTERVAL_MS =
-  parseInt(process.env.NEXT_PUBLIC_POLLING_INTERVAL_SECONDS ?? "300", 10) *
-  1000;
 
 function subtitleFor(count: number): string {
   if (count === 0) {
@@ -23,16 +18,7 @@ function subtitleFor(count: number): string {
 }
 
 export function CollectionGrid({ initial }: { initial: UserPokemonDto[] }) {
-  const { data: pokemons = initial } = useSWR<UserPokemonDto[]>(
-    "/api/collection",
-    apiFetcher,
-    {
-      fallbackData: initial,
-      refreshInterval: POLL_INTERVAL_MS,
-      revalidateOnFocus: true,
-    },
-  );
-
+  const { pokemons } = usePolledCollection(initial);
   const count = pokemons.length;
 
   return (

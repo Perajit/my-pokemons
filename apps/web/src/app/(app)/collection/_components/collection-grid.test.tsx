@@ -1,19 +1,26 @@
 // @vitest-environment jsdom
 
-import { describe, it, expect, vi } from "vitest";
+import { beforeEach, describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 
-// Mock useSWR to return the fallbackData (initial prop) without fetching.
-vi.mock("swr", () => ({
-  default: (
-    _key: string,
-    _fetcher: unknown,
-    options: { fallbackData: unknown },
-  ) => ({ data: options.fallbackData }),
+// Mock the polling hook (the component's data boundary): echo the initial prop
+// back as pokemons, no SWR/network. Polling config itself is covered by
+// use-polled-collection.test.tsx.
+vi.mock("@/hooks/use-polled-collection", () => ({
+  usePolledCollection: vi.fn(),
 }));
 
 import type { UserPokemonDto } from "@/services/user-pokemon";
+import { usePolledCollection } from "@/hooks/use-polled-collection";
 import { CollectionGrid } from "./collection-grid";
+
+const mockUsePolledCollection = vi.mocked(usePolledCollection);
+
+beforeEach(() => {
+  mockUsePolledCollection.mockImplementation((initial) => ({
+    pokemons: initial,
+  }));
+});
 
 function makePokemon(overrides: Partial<UserPokemonDto> = {}): UserPokemonDto {
   return {
