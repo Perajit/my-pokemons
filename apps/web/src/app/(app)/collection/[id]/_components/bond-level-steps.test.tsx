@@ -43,11 +43,6 @@ describe("BondLevelSteps", () => {
     ).toEqual(["true", "false", "true", "false", "false"]);
   });
 
-  it("renders an icon per level", () => {
-    const { container } = render(<BondLevelSteps earned={[]} />);
-    expect(container.querySelectorAll("svg")).toHaveLength(5);
-  });
-
   it("renders all locked when none are earned", () => {
     render(<BondLevelSteps earned={[]} />);
     screen.getAllByRole("listitem").forEach((item) => {

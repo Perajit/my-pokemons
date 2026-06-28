@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Mock } from "vitest";
-import { render, screen, within, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { screen, within, waitFor } from "@testing-library/react";
+import { setup } from "@/test/render";
 
 const toastSuccessMock = vi.fn();
 
@@ -25,61 +25,74 @@ import { shopPokemon } from "./__test-helpers";
 
 const mockAction = buyPokemonAction as Mock;
 
+// Stale-safe query helpers: each re-queries on call; dialog-scoped ones resolve
+// the dialog afresh so a re-render can't leave a detached reference.
+const getDialog = () => screen.getByRole("dialog");
+const queryDialog = () => screen.queryByRole("dialog");
+const getBuyButton = () =>
+  within(getDialog()).getByRole("button", { name: /^buy$/i });
+const getBuyingButton = () =>
+  within(getDialog()).getByRole("button", { name: /buying/i });
+const getCancelButton = () =>
+  within(getDialog()).getByRole("button", { name: /cancel/i });
+const getCloseButton = () =>
+  within(getDialog()).getByRole("button", { name: "Close" });
+const getAlert = () => within(getDialog()).getByRole("alert");
+
+function setupComponent({ userCoins = 500, open = true } = {}) {
+  const onClose = vi.fn();
+  // user + render result come from setup — never a raw render()
+  return {
+    onClose,
+    ...setup(
+      <PokemonCardDialog
+        pokemon={shopPokemon}
+        userCoins={userCoins}
+        open={open}
+        onClose={onClose}
+      />,
+    ),
+  };
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   mockAction.mockResolvedValue({ ok: true });
 });
 
-function renderDialog(userCoins = 500, open = true) {
-  const user = userEvent.setup();
-  const onClose = vi.fn();
-  render(
-    <PokemonCardDialog
-      pokemon={shopPokemon}
-      userCoins={userCoins}
-      open={open}
-      onClose={onClose}
-    />,
-  );
-  return { user, onClose };
-}
-
 describe("PokemonCardDialog", () => {
   it("renders the name, description, and feed/play/decay stats", () => {
-    renderDialog();
-    const dialog = screen.getByRole("dialog");
+    setupComponent();
 
-    expect(within(dialog).getByText("Pikachu")).toBeInTheDocument();
+    expect(within(getDialog()).getByText("Pikachu")).toBeInTheDocument();
     expect(
-      within(dialog).getByText(shopPokemon.description),
+      within(getDialog()).getByText(shopPokemon.description),
     ).toBeInTheDocument();
-    expect(within(dialog).getByText("+15 fullness")).toBeInTheDocument();
-    expect(within(dialog).getByText("+3 coins")).toBeInTheDocument();
-    expect(within(dialog).getByText("+28 mood")).toBeInTheDocument();
-    expect(within(dialog).getByText("+5 coins")).toBeInTheDocument();
-    expect(within(dialog).getByText("−3/hr")).toBeInTheDocument();
-    expect(within(dialog).getByText("−6/hr")).toBeInTheDocument();
+    expect(within(getDialog()).getByText("+15 fullness")).toBeInTheDocument();
+    expect(within(getDialog()).getByText("+3 coins")).toBeInTheDocument();
+    expect(within(getDialog()).getByText("+28 mood")).toBeInTheDocument();
+    expect(within(getDialog()).getByText("+5 coins")).toBeInTheDocument();
+    expect(within(getDialog()).getByText("−3/hr")).toBeInTheDocument();
+    expect(within(getDialog()).getByText("−6/hr")).toBeInTheDocument();
   });
 
   it("renders the price and the user's balance", () => {
-    renderDialog(500);
-    const dialog = screen.getByRole("dialog");
+    setupComponent({ userCoins: 500 });
 
-    expect(within(dialog).getByLabelText("400 coins")).toBeInTheDocument();
-    expect(within(dialog).getByLabelText("500 coins")).toBeInTheDocument();
+    expect(within(getDialog()).getByLabelText("400 coins")).toBeInTheDocument();
+    expect(within(getDialog()).getByLabelText("500 coins")).toBeInTheDocument();
   });
 
   it("renders no dialog when closed", () => {
-    renderDialog(500, false);
+    setupComponent({ open: false });
 
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(queryDialog()).not.toBeInTheDocument();
   });
 
   it("buys on confirm: calls the action, closes, and toasts", async () => {
-    const { user, onClose } = renderDialog();
-    const dialog = screen.getByRole("dialog");
+    const { user, onClose } = setupComponent();
 
-    await user.click(within(dialog).getByRole("button", { name: /^buy$/i }));
+    await user.click(getBuyButton());
 
     await waitFor(() => {
       expect(mockAction).toHaveBeenCalledWith("pika-id");
@@ -99,15 +112,12 @@ describe("PokemonCardDialog", () => {
         message: "Insufficient coins",
       },
     });
-    const { user, onClose } = renderDialog();
-    const dialog = screen.getByRole("dialog");
+    const { user, onClose } = setupComponent();
 
-    await user.click(within(dialog).getByRole("button", { name: /^buy$/i }));
+    await user.click(getBuyButton());
 
     await waitFor(() =>
-      expect(within(dialog).getByRole("alert")).toHaveTextContent(
-        "Insufficient coins",
-      ),
+      expect(getAlert()).toHaveTextContent("Insufficient coins"),
     );
     expect(onClose).not.toHaveBeenCalled();
     expect(toastSuccessMock).not.toHaveBeenCalled();
@@ -115,26 +125,22 @@ describe("PokemonCardDialog", () => {
 
   it("shows a generic error when the action throws unexpectedly", async () => {
     mockAction.mockRejectedValue(new Error("unexpected"));
-    const { user } = renderDialog();
-    const dialog = screen.getByRole("dialog");
+    const { user } = setupComponent();
 
-    await user.click(within(dialog).getByRole("button", { name: /^buy$/i }));
+    await user.click(getBuyButton());
 
     await waitFor(() =>
-      expect(within(dialog).getByRole("alert")).toHaveTextContent(
-        /something went wrong/i,
-      ),
+      expect(getAlert()).toHaveTextContent(/something went wrong/i),
     );
   });
 
   it("disables Buy and shows the hint when balance is below price", () => {
-    renderDialog(100);
-    const dialog = screen.getByRole("dialog");
+    setupComponent({ userCoins: 100 });
 
+    expect(getBuyButton()).toBeDisabled();
     expect(
-      within(dialog).getByRole("button", { name: /^buy$/i }),
-    ).toBeDisabled();
-    expect(within(dialog).getByText(/not enough coins/i)).toBeInTheDocument();
+      within(getDialog()).getByText(/not enough coins/i),
+    ).toBeInTheDocument();
   });
 
   it("disables both buttons and shows loading text while buying", async () => {
@@ -144,37 +150,30 @@ describe("PokemonCardDialog", () => {
         resolveAction = resolve;
       }),
     );
-    const { user } = renderDialog();
-    const dialog = screen.getByRole("dialog");
+    const { user } = setupComponent();
 
-    await user.click(within(dialog).getByRole("button", { name: /^buy$/i }));
+    await user.click(getBuyButton());
 
     await waitFor(() => {
-      expect(
-        within(dialog).getByRole("button", { name: /buying/i }),
-      ).toBeDisabled();
-      expect(
-        within(dialog).getByRole("button", { name: /cancel/i }),
-      ).toBeDisabled();
+      expect(getBuyingButton()).toBeDisabled();
+      expect(getCancelButton()).toBeDisabled();
     });
 
     resolveAction({ ok: true });
   });
 
   it("calls onClose when Cancel is clicked", async () => {
-    const { user, onClose } = renderDialog();
-    const dialog = screen.getByRole("dialog");
+    const { user, onClose } = setupComponent();
 
-    await user.click(within(dialog).getByRole("button", { name: /cancel/i }));
+    await user.click(getCancelButton());
 
     expect(onClose).toHaveBeenCalled();
   });
 
   it("closes when the dialog's X button requests it", async () => {
-    const { user, onClose } = renderDialog();
-    const dialog = screen.getByRole("dialog");
+    const { user, onClose } = setupComponent();
 
-    await user.click(within(dialog).getByRole("button", { name: "Close" }));
+    await user.click(getCloseButton());
 
     expect(onClose).toHaveBeenCalled();
   });
@@ -186,16 +185,11 @@ describe("PokemonCardDialog", () => {
         resolveAction = resolve;
       }),
     );
-    const { user, onClose } = renderDialog();
-    const dialog = screen.getByRole("dialog");
-    await user.click(within(dialog).getByRole("button", { name: /^buy$/i }));
-    await waitFor(() =>
-      expect(
-        within(dialog).getByRole("button", { name: /buying/i }),
-      ).toBeDisabled(),
-    );
+    const { user, onClose } = setupComponent();
+    await user.click(getBuyButton());
+    await waitFor(() => expect(getBuyingButton()).toBeDisabled());
 
-    await user.click(within(dialog).getByRole("button", { name: "Close" }));
+    await user.click(getCloseButton());
 
     expect(onClose).not.toHaveBeenCalled();
     resolveAction({ ok: true });
@@ -206,14 +200,11 @@ describe("PokemonCardDialog", () => {
       ok: false,
       error: { type: "SHOP", code: "INSUFFICIENT_COINS", message: "Nope" },
     });
-    const { user, onClose } = renderDialog();
-    const dialog = screen.getByRole("dialog");
-    await user.click(within(dialog).getByRole("button", { name: /^buy$/i }));
-    await waitFor(() =>
-      expect(within(dialog).getByRole("alert")).toBeInTheDocument(),
-    );
+    const { user, onClose } = setupComponent();
+    await user.click(getBuyButton());
+    await waitFor(() => expect(getAlert()).toBeInTheDocument());
 
-    await user.click(within(dialog).getByRole("button", { name: /cancel/i }));
+    await user.click(getCancelButton());
 
     expect(onClose).toHaveBeenCalled();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();

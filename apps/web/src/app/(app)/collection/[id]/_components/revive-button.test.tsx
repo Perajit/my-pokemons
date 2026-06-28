@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { screen } from "@testing-library/react";
+import { setup } from "@/test/render";
 import * as React from "react";
 
 vi.mock("next/link", () => ({
@@ -21,28 +22,26 @@ vi.mock("next/link", () => ({
 import { ReviveButton } from "./revive-button";
 
 describe("ReviveButton", () => {
-  it("renders the owned count and triggers onRevive when clicked", () => {
+  it("renders the owned count and triggers onRevive when clicked", async () => {
     const onRevive = vi.fn();
-    render(
+    const { user } = setup(
       <ReviveButton reviveCount={2} isPending={false} onRevive={onRevive} />,
     );
 
     const button = screen.getByRole("button", { name: /revive/i });
     expect(button.textContent).toContain("×2");
-    fireEvent.click(button);
+    await user.click(button);
     expect(onRevive).toHaveBeenCalledOnce();
   });
 
   it("shows a pending label and is disabled while reviving", () => {
-    render(
-      <ReviveButton reviveCount={2} isPending={true} onRevive={vi.fn()} />,
-    );
+    setup(<ReviveButton reviveCount={2} isPending={true} onRevive={vi.fn()} />);
 
     expect(screen.getByRole("button", { name: /reviving/i })).toBeDisabled();
   });
 
   it("disables Revive and links to the shop when the user owns none", () => {
-    render(
+    setup(
       <ReviveButton reviveCount={0} isPending={false} onRevive={vi.fn()} />,
     );
 

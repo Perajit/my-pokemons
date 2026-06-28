@@ -25,37 +25,19 @@ describe("StatusBlock", () => {
     expect(screen.getByText("(34 / 100)")).toBeInTheDocument();
   });
 
-  it("sets progress bar width to the rounded value %", () => {
-    const { container } = renderBlock(60);
-    const bar = container.querySelector("[style]");
-    expect(bar).toHaveStyle({ width: "60%" });
+  it("reflects the rounded value on the progress bar", () => {
+    renderBlock(60);
+    expect(screen.getByRole("progressbar")).toHaveAttribute(
+      "aria-valuenow",
+      "60",
+    );
   });
 
   it("renders the action slot", () => {
     renderBlock(50, <button>Feed</button>);
     expect(screen.getByRole("button", { name: "Feed" })).toBeInTheDocument();
   });
-
-  describe("progress bar color by level", () => {
-    it("uses emerald for value > 50", () => {
-      const { container } = renderBlock(51);
-      expect(container.querySelector("[style]")?.className).toContain(
-        "bg-emerald-500",
-      );
-    });
-
-    it("uses amber for value > 20 and ≤ 50", () => {
-      const { container } = renderBlock(21);
-      expect(container.querySelector("[style]")?.className).toContain(
-        "bg-amber-400",
-      );
-    });
-
-    it("uses rose for value ≤ 20", () => {
-      const { container } = renderBlock(20);
-      expect(container.querySelector("[style]")?.className).toContain(
-        "bg-rose-500",
-      );
-    });
-  });
 });
+
+// The value→colour mapping is covered directly in status-levels.test.ts;
+// asserting the resulting Tailwind classes here would only couple to styling.

@@ -1,18 +1,24 @@
 // @vitest-environment jsdom
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import * as React from "react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { screen, within } from "@testing-library/react";
 
-vi.mock("./modal", () => ({
-  DailyGiftModal: vi.fn(({ open }: { open: boolean }) =>
-    open ? <div data-testid="daily-gift-modal" /> : null,
-  ),
-}));
+// Only system boundaries are mocked. The real DailyGiftModal is rendered so
+// these tests verify the actual integration — opening it, dismissing it, and
+// the optimistic dot update driven by the modal's onClaimed. The modal's own
+// animation/claim internals are covered in modal.test.tsx.
+vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+vi.mock("./actions", () => ({ claimDailyGiftAction: vi.fn() }));
 
+import { claimDailyGiftAction } from "./actions";
 import { DailyGiftButton } from "./button";
+import { giftAnimation } from "./animation";
 import type { DailyGiftStatusDto } from "@/services/user";
+import { setup } from "@/test/render";
+
+const ANIM_DEFAULTS = { ...giftAnimation };
+
+const mockClaim = claimDailyGiftAction as ReturnType<typeof vi.fn>;
 
 const availableStatus: DailyGiftStatusDto = {
   availableNow: true,
@@ -24,86 +30,86 @@ const claimedStatus: DailyGiftStatusDto = {
   nextGiftAvailableAt: "2026-06-15T00:00:00.000Z",
 };
 
+// Stale-safe query helpers (re-query on each call).
+const getGiftButton = () => screen.getByRole("button", { name: "Daily gift" });
+const getGiftDot = () => screen.getByLabelText("Gift available");
+const queryGiftDot = () => screen.queryByLabelText("Gift available");
+const getDialog = () => screen.getByRole("dialog");
+const queryDialog = () => screen.queryByRole("dialog");
+const getOpenGiftButton = () =>
+  within(getDialog()).getByRole("button", { name: /open gift/i });
+const getCloseButton = () =>
+  within(getDialog()).getByRole("button", { name: "Close" });
+// During the revealed state the dialog has both a Collect and an X button, each
+// named "Close"; the in-content Collect button comes first.
+const getCollectButton = () =>
+  within(getDialog()).getAllByRole("button", { name: /close/i })[0];
+
 beforeEach(() => {
   vi.clearAllMocks();
 });
 
 describe("DailyGiftButton", () => {
   it("renders the gift icon button", () => {
-    render(<DailyGiftButton status={claimedStatus} />);
-    expect(
-      screen.getByRole("button", { name: "Daily gift" }),
-    ).toBeInTheDocument();
+    setup(<DailyGiftButton status={claimedStatus} />);
+    expect(getGiftButton()).toBeInTheDocument();
   });
 
   it("shows an amber notification dot when the gift is available", () => {
-    render(<DailyGiftButton status={availableStatus} />);
-    expect(screen.getByLabelText("Gift available")).toBeInTheDocument();
+    setup(<DailyGiftButton status={availableStatus} />);
+    expect(getGiftDot()).toBeInTheDocument();
   });
 
   it("shows no dot when the gift has already been claimed today", () => {
-    render(<DailyGiftButton status={claimedStatus} />);
-    expect(screen.queryByLabelText("Gift available")).not.toBeInTheDocument();
+    setup(<DailyGiftButton status={claimedStatus} />);
+    expect(queryGiftDot()).not.toBeInTheDocument();
   });
 
   it("opens the modal when the button is clicked", async () => {
-    const user = userEvent.setup();
-    render(<DailyGiftButton status={availableStatus} />);
+    const { user } = setup(<DailyGiftButton status={availableStatus} />);
 
-    expect(screen.queryByTestId("daily-gift-modal")).not.toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Daily gift" }));
-    expect(screen.getByTestId("daily-gift-modal")).toBeInTheDocument();
+    expect(queryDialog()).not.toBeInTheDocument();
+    await user.click(getGiftButton());
+
+    expect(getDialog()).toBeInTheDocument();
   });
 
-  it("sets modal closed when onClose is called by the modal", async () => {
-    const { DailyGiftModal } = await import("./modal");
-    const MockModal = DailyGiftModal as ReturnType<typeof vi.fn>;
+  it("closes the modal when it is dismissed", async () => {
+    const { user } = setup(<DailyGiftButton status={availableStatus} />);
+    await user.click(getGiftButton());
 
-    MockModal.mockImplementation(
-      ({ open, onClose }: { open: boolean; onClose: () => void }) => {
-        if (!open) {
-          return null;
-        }
-        return (
-          <div data-testid="daily-gift-modal">
-            <button type="button" onClick={onClose}>
-              Close modal
-            </button>
-          </div>
-        );
-      },
-    );
+    await user.click(getCloseButton());
 
-    const user = userEvent.setup();
-    render(<DailyGiftButton status={availableStatus} />);
-
-    await user.click(screen.getByRole("button", { name: "Daily gift" }));
-    expect(screen.getByTestId("daily-gift-modal")).toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: "Close modal" }));
-    expect(screen.queryByTestId("daily-gift-modal")).not.toBeInTheDocument();
+    expect(queryDialog()).not.toBeInTheDocument();
   });
 
-  it("hides the dot after onClaimed is fired (optimistic update)", async () => {
-    const { DailyGiftModal } = await import("./modal");
-    const MockModal = DailyGiftModal as ReturnType<typeof vi.fn>;
+  // Real timers + userEvent. The reveal is setTimeout-driven (not CSS), so the
+  // durations are zeroed so it settles in ~0ms instead of waiting ~1.4s.
+  describe("claim flow", () => {
+    beforeEach(() => {
+      giftAnimation.shakeMs = 0;
+      giftAnimation.openMs = 0;
+    });
+    afterEach(() => {
+      giftAnimation.shakeMs = ANIM_DEFAULTS.shakeMs;
+      giftAnimation.openMs = ANIM_DEFAULTS.openMs;
+    });
 
-    // Make the mock immediately fire onClaimed when rendered with open=true
-    MockModal.mockImplementation(
-      ({ open, onClaimed }: { open: boolean; onClaimed: () => void }) => {
-        if (open) {
-          onClaimed();
-          return <div data-testid="daily-gift-modal" />;
-        }
-        return null;
-      },
-    );
+    it("hides the dot once the revealed gift is collected", async () => {
+      mockClaim.mockResolvedValue({
+        ok: true,
+        data: { reward: { type: "coins", amount: 30 } },
+      });
+      const { user } = setup(<DailyGiftButton status={availableStatus} />);
+      expect(getGiftDot()).toBeInTheDocument();
 
-    const user = userEvent.setup();
-    render(<DailyGiftButton status={availableStatus} />);
+      await user.click(getGiftButton());
+      await user.click(getOpenGiftButton());
+      // The reward appears once the (zeroed) open animation settles.
+      await within(getDialog()).findByText("+30 coins");
+      await user.click(getCollectButton());
 
-    await user.click(screen.getByRole("button", { name: "Daily gift" }));
-
-    expect(screen.queryByLabelText("Gift available")).not.toBeInTheDocument();
+      expect(queryGiftDot()).not.toBeInTheDocument();
+    });
   });
 });

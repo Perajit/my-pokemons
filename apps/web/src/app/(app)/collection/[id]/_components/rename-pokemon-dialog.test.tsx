@@ -1,8 +1,7 @@
 // @vitest-environment jsdom
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { screen, waitFor } from "@testing-library/react";
 import * as React from "react";
 
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
@@ -11,6 +10,7 @@ vi.mock("@/app/(app)/collection/actions", () => ({ renameAction: vi.fn() }));
 import { toast } from "sonner";
 import { renameAction } from "@/app/(app)/collection/actions";
 import { RenamePokemonDialog } from "./rename-pokemon-dialog";
+import { setup } from "@/test/render";
 
 const mockRename = renameAction as ReturnType<typeof vi.fn>;
 
@@ -18,21 +18,23 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-function renderDialog(onRenamed: () => void = vi.fn()) {
-  render(
-    <RenamePokemonDialog
-      userPokemonId="up-1"
-      nickname="Pikachu"
-      onRenamed={onRenamed}
-    />,
-  );
-  return onRenamed;
+function setupComponent(onRenamed: () => void = vi.fn()) {
+  // user + render result come from setup — never a raw render()
+  return {
+    onRenamed,
+    ...setup(
+      <RenamePokemonDialog
+        userPokemonId="up-1"
+        nickname="Pikachu"
+        onRenamed={onRenamed}
+      />,
+    ),
+  };
 }
 
 describe("RenamePokemonDialog", () => {
   it("opens the dialog seeded with the current nickname", async () => {
-    const user = userEvent.setup();
-    renderDialog();
+    const { user } = setupComponent();
 
     await user.click(screen.getByRole("button", { name: /rename pikachu/i }));
 
@@ -40,8 +42,7 @@ describe("RenamePokemonDialog", () => {
   });
 
   it("keeps Save disabled while the nickname is unchanged", async () => {
-    const user = userEvent.setup();
-    renderDialog();
+    const { user } = setupComponent();
 
     await user.click(screen.getByRole("button", { name: /rename pikachu/i }));
     await screen.findByLabelText(/nickname/i);
@@ -50,9 +51,8 @@ describe("RenamePokemonDialog", () => {
   });
 
   it("submits the new nickname, fires onRenamed, and toasts success", async () => {
-    const user = userEvent.setup();
     mockRename.mockResolvedValue({ ok: true });
-    const onRenamed = renderDialog();
+    const { user, onRenamed } = setupComponent();
 
     await user.click(screen.getByRole("button", { name: /rename pikachu/i }));
     const input = await screen.findByLabelText(/nickname/i);
@@ -66,7 +66,6 @@ describe("RenamePokemonDialog", () => {
   });
 
   it("shows an error toast when the rename fails", async () => {
-    const user = userEvent.setup();
     mockRename.mockResolvedValue({
       ok: false,
       error: {
@@ -75,7 +74,7 @@ describe("RenamePokemonDialog", () => {
         message: "Nickname is required",
       },
     });
-    renderDialog();
+    const { user } = setupComponent();
 
     await user.click(screen.getByRole("button", { name: /rename pikachu/i }));
     const input = await screen.findByLabelText(/nickname/i);

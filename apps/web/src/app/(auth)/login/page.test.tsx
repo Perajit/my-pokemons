@@ -1,8 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Mock } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { screen, waitFor } from "@testing-library/react";
 import type * as React from "react";
 
 vi.mock("next/link", () => ({
@@ -19,6 +18,7 @@ vi.mock("./actions", () => ({ loginAction: vi.fn() }));
 
 import { loginAction } from "./actions";
 import LoginPage from "./page";
+import { setup } from "@/test/render";
 
 const mockAction = loginAction as Mock;
 
@@ -29,7 +29,7 @@ beforeEach(() => {
 
 describe("LoginPage", () => {
   it("renders the form and a link to register", () => {
-    render(<LoginPage />);
+    setup(<LoginPage />);
 
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(
@@ -42,8 +42,7 @@ describe("LoginPage", () => {
   });
 
   it("submits typed credentials to the login action", async () => {
-    const user = userEvent.setup();
-    render(<LoginPage />);
+    const { user } = setup(<LoginPage />);
 
     await user.type(screen.getByLabelText(/email/i), "a@b.com");
     await user.type(
@@ -61,8 +60,7 @@ describe("LoginPage", () => {
 
   it("shows the error returned by the action", async () => {
     mockAction.mockResolvedValue("Invalid email or password");
-    const user = userEvent.setup();
-    render(<LoginPage />);
+    const { user } = setup(<LoginPage />);
 
     await user.type(screen.getByLabelText(/email/i), "a@b.com");
     await user.type(
@@ -77,8 +75,7 @@ describe("LoginPage", () => {
   });
 
   it("blocks submission and shows errors when required fields are empty", async () => {
-    const user = userEvent.setup();
-    render(<LoginPage />);
+    const { user } = setup(<LoginPage />);
 
     await user.click(screen.getByRole("button", { name: /login/i }));
 
@@ -88,8 +85,7 @@ describe("LoginPage", () => {
   });
 
   it("allows submission with a non-standard email format (server decides)", async () => {
-    const user = userEvent.setup();
-    render(<LoginPage />);
+    const { user } = setup(<LoginPage />);
 
     await user.type(screen.getByLabelText(/email/i), "not-an-email");
     await user.type(
@@ -103,8 +99,7 @@ describe("LoginPage", () => {
 
   it("preserves typed values after the server returns an error", async () => {
     mockAction.mockResolvedValue("Invalid email or password");
-    const user = userEvent.setup();
-    render(<LoginPage />);
+    const { user } = setup(<LoginPage />);
 
     await user.type(screen.getByLabelText(/email/i), "a@b.com");
     await user.type(
@@ -128,8 +123,7 @@ describe("LoginPage", () => {
           resolveAction = resolve;
         }),
     );
-    const user = userEvent.setup();
-    render(<LoginPage />);
+    const { user } = setup(<LoginPage />);
 
     await user.type(screen.getByLabelText(/email/i), "a@b.com");
     await user.type(
@@ -152,8 +146,7 @@ describe("LoginPage", () => {
   });
 
   it("toggles password visibility when the eye button is clicked", async () => {
-    const user = userEvent.setup();
-    render(<LoginPage />);
+    const { user } = setup(<LoginPage />);
 
     const input = screen.getByLabelText(/password/i, { selector: "input" });
     expect(input).toHaveAttribute("type", "password");

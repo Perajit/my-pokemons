@@ -1,8 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Mock } from "vitest";
-import { render, screen, waitFor, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { screen, waitFor, within } from "@testing-library/react";
 import type * as React from "react";
 
 vi.mock("next/link", () => ({
@@ -19,6 +18,7 @@ vi.mock("./actions", () => ({ registerAction: vi.fn() }));
 
 import { registerAction } from "./actions";
 import RegisterPage from "./page";
+import { setup } from "@/test/render";
 
 const mockAction = registerAction as Mock;
 
@@ -29,7 +29,7 @@ beforeEach(() => {
 
 describe("RegisterPage", () => {
   it("renders the form and a link to login", () => {
-    render(<RegisterPage />);
+    setup(<RegisterPage />);
 
     expect(screen.getByLabelText(/^name$/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
@@ -44,8 +44,7 @@ describe("RegisterPage", () => {
   });
 
   it("submits typed credentials to the register action", async () => {
-    const user = userEvent.setup();
-    render(<RegisterPage />);
+    const { user } = setup(<RegisterPage />);
 
     await user.type(screen.getByLabelText(/^name$/i), "Ash");
     await user.type(screen.getByLabelText(/email/i), "ash@pallet.com");
@@ -65,8 +64,7 @@ describe("RegisterPage", () => {
 
   it("shows the error returned by the action", async () => {
     mockAction.mockResolvedValue("Email already in use");
-    const user = userEvent.setup();
-    render(<RegisterPage />);
+    const { user } = setup(<RegisterPage />);
 
     await user.type(screen.getByLabelText(/email/i), "ash@pallet.com");
     await user.type(
@@ -79,7 +77,7 @@ describe("RegisterPage", () => {
   });
 
   it("shows the password requirements checklist immediately, even when empty", () => {
-    render(<RegisterPage />);
+    setup(<RegisterPage />);
 
     const list = screen.getByRole("list", { name: /password requirements/i });
     expect(list).toBeInTheDocument();
@@ -93,8 +91,7 @@ describe("RegisterPage", () => {
   });
 
   it("marks a checklist row as met when the password satisfies its rule", async () => {
-    const user = userEvent.setup();
-    render(<RegisterPage />);
+    const { user } = setup(<RegisterPage />);
 
     await user.type(
       screen.getByLabelText(/^password/i, { selector: "input" }),
@@ -105,13 +102,12 @@ describe("RegisterPage", () => {
     const rows = within(list).getAllByRole("listitem");
     expect(rows).toHaveLength(5);
     for (const row of rows) {
-      expect(row).toHaveClass("text-green-600");
+      expect(within(row).getByRole("img", { name: "met" })).toBeInTheDocument();
     }
   });
 
   it("blocks submission when password rules are not all met", async () => {
-    const user = userEvent.setup();
-    render(<RegisterPage />);
+    const { user } = setup(<RegisterPage />);
 
     await user.type(screen.getByLabelText(/email/i), "ash@pallet.com");
     await user.type(
@@ -127,8 +123,7 @@ describe("RegisterPage", () => {
   });
 
   it("blocks submission and shows email error when email is invalid", async () => {
-    const user = userEvent.setup();
-    render(<RegisterPage />);
+    const { user } = setup(<RegisterPage />);
 
     await user.type(screen.getByLabelText(/email/i), "not-an-email");
     await user.type(
@@ -145,8 +140,7 @@ describe("RegisterPage", () => {
 
   it("preserves typed values after the server returns an error", async () => {
     mockAction.mockResolvedValue("Email already in use");
-    const user = userEvent.setup();
-    render(<RegisterPage />);
+    const { user } = setup(<RegisterPage />);
 
     await user.type(screen.getByLabelText(/^name$/i), "Ash");
     await user.type(screen.getByLabelText(/email/i), "ash@pallet.com");
@@ -173,8 +167,7 @@ describe("RegisterPage", () => {
           resolveAction = resolve;
         }),
     );
-    const user = userEvent.setup();
-    render(<RegisterPage />);
+    const { user } = setup(<RegisterPage />);
 
     await user.type(screen.getByLabelText(/email/i), "ash@pallet.com");
     await user.type(
@@ -197,8 +190,7 @@ describe("RegisterPage", () => {
   });
 
   it("toggles password visibility when the eye button is clicked", async () => {
-    const user = userEvent.setup();
-    render(<RegisterPage />);
+    const { user } = setup(<RegisterPage />);
 
     const input = screen.getByLabelText(/^password/i, { selector: "input" });
     expect(input).toHaveAttribute("type", "password");

@@ -237,6 +237,15 @@ Unit and component tests are colocated with their source as `*.test.ts` /
 tests live in `apps/web/tests/integration/`. E2E specs live in
 `apps/web/tests/e2e/`.
 
+**Always drive interactions with `userEvent` (`@testing-library/user-event`),
+never `fireEvent`.** Prefer semantic role queries (`getByRole`) over matching
+literal copy; use `getBy*` for presence and `queryBy*` only for absence; scope
+queries inside a portal/dialog with `within(...)`. Mock only system boundaries
+(network actions, `sonner`, `next/*`) — render real child components. CSS
+animations/transitions are disabled globally in the test setup; JS-timed
+animations (e.g. `setTimeout` choreography) are not CSS, so make their durations
+zero-able and zero them in tests rather than waiting them out.
+
 ### Definition of done
 
 All of the following must pass before an implementation is considered complete.

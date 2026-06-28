@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
 
-import { act, render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { act, screen, waitFor } from "@testing-library/react";
 import * as React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -52,6 +51,7 @@ import {
   reviveAction,
 } from "../../actions";
 import { PokemonDetail } from "./pokemon-detail";
+import { setup } from "@/test/render";
 
 const mockFeed = feedAction as ReturnType<typeof vi.fn>;
 const mockPlay = playAction as ReturnType<typeof vi.fn>;
@@ -76,13 +76,21 @@ function makePokemon(overrides: Partial<UserPokemonDto> = {}): UserPokemonDto {
   };
 }
 
+// user + render result come from setup — never a raw render()
+function setupComponent(props: {
+  initial: UserPokemonDto;
+  reviveCount?: number;
+}) {
+  return setup(<PokemonDetail {...props} />);
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
 });
 
 describe("PokemonDetail", () => {
   it("renders name, days since acquired, and stat bars when active", () => {
-    render(<PokemonDetail initial={makePokemon()} />);
+    setupComponent({ initial: makePokemon() });
     expect(
       screen.getByRole("heading", { name: "Pikachu" }),
     ).toBeInTheDocument();
@@ -93,7 +101,7 @@ describe("PokemonDetail", () => {
   });
 
   it("shows the nickname as the title with a rename button", () => {
-    render(<PokemonDetail initial={makePokemon({ nickname: "Sparky" })} />);
+    setupComponent({ initial: makePokemon({ nickname: "Sparky" }) });
     expect(screen.getByRole("heading", { name: "Sparky" })).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /rename sparky/i }),
@@ -101,9 +109,10 @@ describe("PokemonDetail", () => {
   });
 
   it("renames through the pencil dialog on success", async () => {
-    const user = userEvent.setup();
     (renameAction as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: true });
-    render(<PokemonDetail initial={makePokemon({ nickname: "Pikachu" })} />);
+    const { user } = setupComponent({
+      initial: makePokemon({ nickname: "Pikachu" }),
+    });
 
     await user.click(screen.getByRole("button", { name: /rename pikachu/i }));
     const input = await screen.findByLabelText(/nickname/i);
@@ -117,9 +126,9 @@ describe("PokemonDetail", () => {
   });
 
   it("always shows the species name as a subtitle under the nickname", () => {
-    const { rerender } = render(
-      <PokemonDetail initial={makePokemon({ nickname: "Sparky" })} />,
-    );
+    const { rerender } = setupComponent({
+      initial: makePokemon({ nickname: "Sparky" }),
+    });
     // renamed → nickname title + species subtitle
     expect(screen.getByRole("heading", { name: "Sparky" })).toBeInTheDocument();
     expect(screen.getByText("Pikachu")).toBeInTheDocument();
@@ -131,29 +140,27 @@ describe("PokemonDetail", () => {
   });
 
   it("renders a Back to Collection link pointing at /collection", () => {
-    render(<PokemonDetail initial={makePokemon()} />);
+    setupComponent({ initial: makePokemon() });
     expect(
       screen.getByRole("link", { name: /back to collection/i }),
     ).toHaveAttribute("href", "/collection");
   });
 
   it("renders the streak header with the active day count", () => {
-    render(<PokemonDetail initial={makePokemon({ activeStreak: 1 })} />);
+    setupComponent({ initial: makePokemon({ activeStreak: 1 }) });
     expect(screen.getByText(/1 day streak/i)).toBeInTheDocument();
   });
 
   it("shows fainted label and hides stat bars when not active", () => {
-    render(
-      <PokemonDetail
-        initial={makePokemon({
-          isFainted: true,
-          faintedAt: "2024-06-01T00:00:00Z",
-          currentFullness: 0,
-          currentMood: 0,
-          heart: 0,
-        })}
-      />,
-    );
+    setupComponent({
+      initial: makePokemon({
+        isFainted: true,
+        faintedAt: "2024-06-01T00:00:00Z",
+        currentFullness: 0,
+        currentMood: 0,
+        heart: 0,
+      }),
+    });
     expect(screen.getByText("Fainted")).toBeInTheDocument();
     expect(screen.queryByLabelText(/Heart:/)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/Fullness:/)).not.toBeInTheDocument();
@@ -161,13 +168,13 @@ describe("PokemonDetail", () => {
   });
 
   it("renders Feed and Play buttons when active", () => {
-    render(<PokemonDetail initial={makePokemon()} />);
+    setupComponent({ initial: makePokemon() });
     expect(screen.getByRole("button", { name: "Feed" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Play" })).toBeInTheDocument();
   });
 
   it("hides Feed and Play buttons when fainted", () => {
-    render(<PokemonDetail initial={makePokemon({ isFainted: true })} />);
+    setupComponent({ initial: makePokemon({ isFainted: true }) });
     expect(
       screen.queryByRole("button", { name: "Feed" }),
     ).not.toBeInTheDocument();
@@ -189,11 +196,9 @@ describe("PokemonDetail", () => {
     it("disables the Feed button and shows a m:ss countdown", () => {
       // 90 seconds in the future → 1:30
       const cooldownEndsAt = new Date("2024-06-01T12:01:30Z").toISOString();
-      render(
-        <PokemonDetail
-          initial={makePokemon({ feedCooldownEndsAt: cooldownEndsAt })}
-        />,
-      );
+      setupComponent({
+        initial: makePokemon({ feedCooldownEndsAt: cooldownEndsAt }),
+      });
 
       const feedBtn = screen.getByRole("button", { name: "Feed" });
       expect(feedBtn).toBeDisabled();
@@ -202,11 +207,9 @@ describe("PokemonDetail", () => {
 
     it("ticks the countdown forward as time advances", () => {
       const cooldownEndsAt = new Date("2024-06-01T12:01:30Z").toISOString();
-      const { unmount } = render(
-        <PokemonDetail
-          initial={makePokemon({ feedCooldownEndsAt: cooldownEndsAt })}
-        />,
-      );
+      const { unmount } = setupComponent({
+        initial: makePokemon({ feedCooldownEndsAt: cooldownEndsAt }),
+      });
 
       act(() => {
         vi.advanceTimersByTime(30_000);
@@ -220,7 +223,6 @@ describe("PokemonDetail", () => {
   });
 
   it("calls feedAction and toasts the pokemon_fed event on Feed click", async () => {
-    const user = userEvent.setup();
     mockFeed.mockResolvedValue({
       ok: true,
       data: {
@@ -229,7 +231,7 @@ describe("PokemonDetail", () => {
         ],
       },
     });
-    render(<PokemonDetail initial={makePokemon()} />);
+    const { user } = setupComponent({ initial: makePokemon() });
 
     await act(async () => {
       await user.click(screen.getByRole("button", { name: "Feed" }));
@@ -240,7 +242,6 @@ describe("PokemonDetail", () => {
   });
 
   it("calls playAction and toasts the pokemon_played event on Play click", async () => {
-    const user = userEvent.setup();
     mockPlay.mockResolvedValue({
       ok: true,
       data: {
@@ -249,7 +250,7 @@ describe("PokemonDetail", () => {
         ],
       },
     });
-    render(<PokemonDetail initial={makePokemon()} />);
+    const { user } = setupComponent({ initial: makePokemon() });
 
     await act(async () => {
       await user.click(screen.getByRole("button", { name: "Play" }));
@@ -260,7 +261,6 @@ describe("PokemonDetail", () => {
   });
 
   it("fires an achievement toast in addition to the action toast on Play", async () => {
-    const user = userEvent.setup();
     mockPlay.mockResolvedValue({
       ok: true,
       data: {
@@ -274,7 +274,7 @@ describe("PokemonDetail", () => {
         ],
       },
     });
-    render(<PokemonDetail initial={makePokemon()} />);
+    const { user } = setupComponent({ initial: makePokemon() });
 
     await act(async () => {
       await user.click(screen.getByRole("button", { name: "Play" }));
@@ -287,7 +287,6 @@ describe("PokemonDetail", () => {
   });
 
   it("fires an achievement toast in addition to the action toast on Feed", async () => {
-    const user = userEvent.setup();
     mockFeed.mockResolvedValue({
       ok: true,
       data: {
@@ -301,7 +300,7 @@ describe("PokemonDetail", () => {
         ],
       },
     });
-    render(<PokemonDetail initial={makePokemon()} />);
+    const { user } = setupComponent({ initial: makePokemon() });
 
     await act(async () => {
       await user.click(screen.getByRole("button", { name: "Feed" }));
@@ -314,7 +313,6 @@ describe("PokemonDetail", () => {
   });
 
   it("toasts the error message on a failed Feed click", async () => {
-    const user = userEvent.setup();
     mockFeed.mockResolvedValue({
       ok: false,
       error: {
@@ -323,7 +321,7 @@ describe("PokemonDetail", () => {
         message: "Pokémon has fainted",
       },
     });
-    render(<PokemonDetail initial={makePokemon()} />);
+    const { user } = setupComponent({ initial: makePokemon() });
 
     await act(async () => {
       await user.click(screen.getByRole("button", { name: "Feed" }));
@@ -334,7 +332,6 @@ describe("PokemonDetail", () => {
   });
 
   it("toasts the error message on a failed Play click", async () => {
-    const user = userEvent.setup();
     mockPlay.mockResolvedValue({
       ok: false,
       error: {
@@ -344,7 +341,7 @@ describe("PokemonDetail", () => {
         metadata: { cooldownEndsAt: "2024-06-01T12:30:00.000Z" },
       },
     });
-    render(<PokemonDetail initial={makePokemon()} />);
+    const { user } = setupComponent({ initial: makePokemon() });
 
     await act(async () => {
       await user.click(screen.getByRole("button", { name: "Play" }));
@@ -358,14 +355,16 @@ describe("PokemonDetail", () => {
     makePokemon({ isFainted: true, currentFullness: 0, currentMood: 0 });
 
   it("revives a fainted pokemon and toasts the pokemon_revived event", async () => {
-    const user = userEvent.setup();
     mockRevive.mockResolvedValue({
       ok: true,
       data: {
         events: [{ type: "pokemon_revived", pokemonName: "Pikachu" }],
       },
     });
-    render(<PokemonDetail initial={faintedRevive()} reviveCount={2} />);
+    const { user } = setupComponent({
+      initial: faintedRevive(),
+      reviveCount: 2,
+    });
 
     await act(async () => {
       await user.click(screen.getByRole("button", { name: /revive/i }));
@@ -376,7 +375,7 @@ describe("PokemonDetail", () => {
   });
 
   it("disables Revive and links to the shop when no Revive is owned", () => {
-    render(<PokemonDetail initial={faintedRevive()} reviveCount={0} />);
+    setupComponent({ initial: faintedRevive(), reviveCount: 0 });
 
     expect(screen.getByRole("button", { name: /revive/i })).toBeDisabled();
     expect(

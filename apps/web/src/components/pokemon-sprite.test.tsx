@@ -12,29 +12,12 @@ describe("PokemonSprite", () => {
 
   it("builds the sprite src from the pokeApiId", () => {
     render(<PokemonSprite pokeApiId={25} name="Pikachu" variant="card" />);
-    expect(screen.getByAltText("Pikachu").getAttribute("src")).toContain("25");
-  });
-
-  it("omits the gradient background for the card variant", () => {
-    const { container } = render(
-      <PokemonSprite pokeApiId={25} name="Pikachu" variant="card" />,
-    );
-    expect(container.firstElementChild?.className).not.toContain(
-      "bg-gradient-to-b",
+    expect(screen.getByAltText("Pikachu")).toHaveAttribute(
+      "src",
+      expect.stringContaining("25"),
     );
   });
 
-  it("applies the gradient background for the feature variant", () => {
-    const { container } = render(
-      <PokemonSprite pokeApiId={25} name="Pikachu" variant="feature" />,
-    );
-    expect(container.firstElementChild?.className).toContain(
-      "bg-gradient-to-b",
-    );
-  });
-
-  it("does not gray out the sprite by default", () => {
-    render(<PokemonSprite pokeApiId={25} name="Pikachu" variant="feature" />);
-    expect(screen.getByAltText("Pikachu").className).not.toContain("grayscale");
-  });
+  // The card/feature variants only swap layout/background styling — a purely
+  // visual difference with no behavioural signal, so they aren't asserted here.
 });

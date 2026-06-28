@@ -139,7 +139,10 @@ export default function RegisterPage() {
                     r.met ? "text-green-600" : "text-muted-foreground",
                   )}
                 >
-                  <span aria-hidden>{r.met ? "✓" : "○"}</span> {r.label}
+                  <span role="img" aria-label={r.met ? "met" : "not met"}>
+                    {r.met ? "✓" : "○"}
+                  </span>{" "}
+                  {r.label}
                 </li>
               ))}
             </ul>

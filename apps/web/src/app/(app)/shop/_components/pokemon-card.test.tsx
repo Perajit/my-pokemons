@@ -1,8 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Mock } from "vitest";
-import { render, screen, within, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { screen, within, waitFor } from "@testing-library/react";
 
 vi.mock("next/image", () => ({
   default: ({ alt, src }: { alt: string; src: string }) => (
@@ -21,19 +20,27 @@ vi.mock("../actions", () => ({ buyPokemonAction: vi.fn() }));
 import { buyPokemonAction } from "../actions";
 import { PokemonCard } from "./pokemon-card";
 import { shopPokemon } from "./__test-helpers";
+import { setup } from "@/test/render";
 
 const mockAction = buyPokemonAction as Mock;
+
+// Stale-safe query helpers (re-query on each call).
+const getCard = () => screen.getByRole("button", { name: /pikachu/i });
+const getDialog = () => screen.getByRole("dialog");
+const queryDialog = () => screen.queryByRole("dialog");
+const getBuyButton = () =>
+  within(getDialog()).getByRole("button", { name: /^buy$/i });
+const getCancelButton = () =>
+  within(getDialog()).getByRole("button", { name: /cancel/i });
 
 beforeEach(() => {
   vi.clearAllMocks();
   mockAction.mockResolvedValue({ ok: true });
 });
 
-const card = () => screen.getByRole("button", { name: /pikachu/i });
-
 describe("PokemonCard", () => {
   it("renders the pokemon name, price, and owned count on the face", () => {
-    render(<PokemonCard pokemon={shopPokemon} userCoins={500} />);
+    setup(<PokemonCard pokemon={shopPokemon} userCoins={500} />);
 
     expect(screen.getByText("Pikachu")).toBeInTheDocument();
     expect(screen.getByText(/400/)).toBeInTheDocument();
@@ -41,81 +48,78 @@ describe("PokemonCard", () => {
   });
 
   it("keeps the dialog closed until the card is activated", () => {
-    render(<PokemonCard pokemon={shopPokemon} userCoins={500} />);
+    setup(<PokemonCard pokemon={shopPokemon} userCoins={500} />);
 
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(queryDialog()).not.toBeInTheDocument();
   });
 
   it("opens the dialog on click, flowing the pokemon and balance through", async () => {
-    const user = userEvent.setup();
-    render(<PokemonCard pokemon={shopPokemon} userCoins={500} />);
+    const { user } = setup(
+      <PokemonCard pokemon={shopPokemon} userCoins={500} />,
+    );
 
-    await user.click(card());
+    await user.click(getCard());
 
-    const dialog = screen.getByRole("dialog");
     expect(
-      within(dialog).getByText(shopPokemon.description),
+      within(getDialog()).getByText(shopPokemon.description),
     ).toBeInTheDocument();
-    expect(within(dialog).getByLabelText("500 coins")).toBeInTheDocument();
-    expect(
-      within(dialog).getByRole("button", { name: /^buy$/i }),
-    ).toBeInTheDocument();
+    expect(within(getDialog()).getByLabelText("500 coins")).toBeInTheDocument();
+    expect(getBuyButton()).toBeInTheDocument();
   });
 
   it("opens the dialog when Enter is pressed on the card", async () => {
-    const user = userEvent.setup();
-    render(<PokemonCard pokemon={shopPokemon} userCoins={500} />);
+    const { user } = setup(
+      <PokemonCard pokemon={shopPokemon} userCoins={500} />,
+    );
 
-    card().focus();
+    getCard().focus();
     await user.keyboard("{Enter}");
 
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(getDialog()).toBeInTheDocument();
   });
 
   it("opens the dialog when Space is pressed on the card", async () => {
-    const user = userEvent.setup();
-    render(<PokemonCard pokemon={shopPokemon} userCoins={500} />);
+    const { user } = setup(
+      <PokemonCard pokemon={shopPokemon} userCoins={500} />,
+    );
 
-    card().focus();
+    getCard().focus();
     await user.keyboard(" ");
 
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(getDialog()).toBeInTheDocument();
   });
 
   it("ignores other keys on the card", async () => {
-    const user = userEvent.setup();
-    render(<PokemonCard pokemon={shopPokemon} userCoins={500} />);
+    const { user } = setup(
+      <PokemonCard pokemon={shopPokemon} userCoins={500} />,
+    );
 
-    card().focus();
+    getCard().focus();
     await user.keyboard("a");
 
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(queryDialog()).not.toBeInTheDocument();
   });
 
   it("closes the dialog when its Cancel button is clicked", async () => {
-    const user = userEvent.setup();
-    render(<PokemonCard pokemon={shopPokemon} userCoins={500} />);
-    await user.click(card());
-    const dialog = screen.getByRole("dialog");
+    const { user } = setup(
+      <PokemonCard pokemon={shopPokemon} userCoins={500} />,
+    );
+    await user.click(getCard());
+    expect(getDialog()).toBeInTheDocument();
 
-    await user.click(within(dialog).getByRole("button", { name: /cancel/i }));
+    await user.click(getCancelButton());
 
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(queryDialog()).not.toBeInTheDocument();
   });
 
   it("closes the dialog after a successful buy", async () => {
-    const user = userEvent.setup();
-    render(<PokemonCard pokemon={shopPokemon} userCoins={500} />);
-    await user.click(card());
-
-    await user.click(
-      within(screen.getByRole("dialog")).getByRole("button", {
-        name: /^buy$/i,
-      }),
+    const { user } = setup(
+      <PokemonCard pokemon={shopPokemon} userCoins={500} />,
     );
+    await user.click(getCard());
 
-    await waitFor(() =>
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
-    );
+    await user.click(getBuyButton());
+
+    await waitFor(() => expect(queryDialog()).not.toBeInTheDocument());
   });
 });

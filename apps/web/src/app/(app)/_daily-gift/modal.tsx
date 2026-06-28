@@ -12,6 +12,7 @@ import { Coins, Gift, HeartPulse, PackageOpen } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { claimDailyGiftAction } from "./actions";
+import { giftAnimation } from "./animation";
 
 type AnimState = "idle" | "shaking" | "opening" | "revealed";
 
@@ -81,8 +82,8 @@ export function DailyGiftModal({
         }
         setReward(result.data.reward);
         setAnimState("revealed");
-      }, 500);
-    }, 900);
+      }, giftAnimation.openMs);
+    }, giftAnimation.shakeMs);
   }
 
   function handleClose() {

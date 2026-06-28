@@ -27,6 +27,10 @@ export function StatusBlock({
         </div>
         <div className="w-full h-1 overflow-hidden rounded-full bg-stone-200 mt-0.5">
           <div
+            role="progressbar"
+            aria-valuenow={rounded}
+            aria-valuemin={0}
+            aria-valuemax={100}
             className={cn(
               "h-full rounded-full transition-[width] duration-500 ease-out",
               color,
