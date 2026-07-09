@@ -52,29 +52,25 @@ import {
 } from "../../actions";
 import { PokemonDetail } from "./pokemon-detail";
 import { setup } from "@/test/render";
+import { makeUserPokemonDto } from "@/test/dto-factories";
 
 const mockFeed = feedAction as ReturnType<typeof vi.fn>;
 const mockPlay = playAction as ReturnType<typeof vi.fn>;
 const mockRevive = reviveAction as ReturnType<typeof vi.fn>;
 const mockUsePolledUserPokemon = vi.mocked(usePolledUserPokemon);
 
+// The detail view's tests assume a healthier default than the shared factory
+// (higher stats, longer streak, earlier acquiredAt); keep those defaults here as
+// a thin wrapper over the shared builder so the 20 call sites stay unchanged.
 function makePokemon(overrides: Partial<UserPokemonDto> = {}): UserPokemonDto {
-  return {
-    id: "up-1",
-    nickname: "Pikachu",
-    pokemon: { name: "Pikachu", pokeApiId: 25 },
+  return makeUserPokemonDto({
     currentFullness: 80,
     currentMood: 70,
     heart: 76,
     activeStreak: 5,
-    isFainted: false,
     acquiredAt: "2024-05-26T12:00:00Z",
-    faintedAt: null,
-    feedCooldownEndsAt: null,
-    playCooldownEndsAt: null,
-    earnedBondLevels: [],
     ...overrides,
-  };
+  });
 }
 
 // user + render result come from setup — never a raw render()

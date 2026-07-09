@@ -1,11 +1,11 @@
 import type { Prisma } from "@my-pokemons/database";
 
-// Test-owned fixture data, typed as Prisma's *CreateInput — the exact shape
-// db.X.create({ data }) expects. Deliberately NOT derived from the production
-// catalogs (POKEMON_CONFIGS / ITEM_CONFIGS): tests assert on exact values (coin
-// math, decay, gains), so the data they run against must be stable and
-// independent of whatever the real catalog holds. Override only the field a
-// given test cares about.
+// Prisma *CreateInput builders for seeding the integration-test DB — the exact
+// shape db.X.create({ data }) expects. Deliberately NOT derived from the
+// production catalogs (POKEMON_CONFIGS / ITEM_CONFIGS): tests assert on exact
+// values (coin math, decay, gains), so the data they run against must be stable
+// and independent of whatever the real catalog holds. Override only the field a
+// given test cares about. (Client-layer DTO builders live in dto-factories.ts.)
 
 export function makeUserData(
   overrides: Partial<Prisma.UserCreateInput> = {},

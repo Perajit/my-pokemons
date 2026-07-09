@@ -15,7 +15,7 @@ import {
   seedUserItem,
   resetGameplayTables,
 } from "./db-helpers";
-import { makeUserData, makeItemData } from "@/test/fixtures";
+import { makeUserData, makeItemData } from "@/test/seed-factories";
 
 beforeEach(resetGameplayTables);
 afterAll(() => db.$disconnect());

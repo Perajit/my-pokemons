@@ -16,7 +16,7 @@ import {
   seedUserPokemon,
   resetGameplayTables,
 } from "./db-helpers";
-import { makeUserData, makePokemonData } from "@/test/fixtures";
+import { makeUserData, makePokemonData } from "@/test/seed-factories";
 
 const mockAuth = auth as ReturnType<typeof vi.fn>;
 

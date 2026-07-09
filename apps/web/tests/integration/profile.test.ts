@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { NotFoundError } from "@/services/errors";
 import { getUserProfileDto, updateUserProfile } from "@/services/user";
 import { seedUser, resetGameplayTables } from "./db-helpers";
-import { makeUserData } from "@/test/fixtures";
+import { makeUserData } from "@/test/seed-factories";
 
 beforeEach(resetGameplayTables);
 afterAll(() => db.$disconnect());

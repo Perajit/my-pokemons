@@ -11,7 +11,7 @@ import {
   seedUserPokemon,
   resetGameplayTables,
 } from "./db-helpers";
-import { makeUserData, makePokemonData } from "@/test/fixtures";
+import { makeUserData, makePokemonData } from "@/test/seed-factories";
 
 beforeEach(resetGameplayTables);
 afterAll(() => db.$disconnect());

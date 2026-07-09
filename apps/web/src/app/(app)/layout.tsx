@@ -1,13 +1,10 @@
 import Link from "next/link";
-import { CoinBadge } from "@/components/coin-badge";
 import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
 import { Pokeball } from "@/components/pokeball";
 import { PokeballBackground } from "@/components/pokeball-background";
-import { getDailyGiftStatusDto } from "@/services/user";
+import { getMeDto } from "@/services/me";
 import { NavLinks } from "./_components/nav-links";
-import { DailyGiftButton } from "./_daily-gift/button";
-import { UserMenu } from "./_user-menu/menu";
+import { AppHeader } from "./_components/app-header";
 
 export default async function AppLayout({
   children,
@@ -15,15 +12,7 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   const session = await auth();
-  const [user, dailyGiftStatus] = session
-    ? await Promise.all([
-        db.user.findUnique({
-          where: { id: session.user.id },
-          select: { name: true, email: true, coins: true },
-        }),
-        getDailyGiftStatusDto(session.user.id),
-      ])
-    : [null, null];
+  const me = session ? await getMeDto(session.user.id) : null;
 
   return (
     <div className="relative min-h-svh overflow-hidden bg-gradient-to-br from-rose-100 via-orange-50 to-amber-100">
@@ -40,13 +29,7 @@ export default async function AppLayout({
               </Link>
               <NavLinks className="hidden sm:flex" />
             </div>
-            <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-              <CoinBadge value={user?.coins ?? 0} label="Coin balance" />
-              {dailyGiftStatus && <DailyGiftButton status={dailyGiftStatus} />}
-              {user && (
-                <UserMenu user={{ name: user.name, email: user.email }} />
-              )}
-            </div>
+            {me && <AppHeader initial={me} />}
           </div>
           <div className="border-t border-stone-200/70 py-2 sm:hidden">
             <NavLinks />

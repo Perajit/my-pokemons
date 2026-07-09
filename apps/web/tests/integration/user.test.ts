@@ -5,7 +5,7 @@ import { describe, it, expect, beforeEach, afterAll } from "vitest";
 import { db } from "@/lib/db";
 import { getUserCoins } from "@/services/user";
 import { seedUser, resetGameplayTables } from "./db-helpers";
-import { makeUserData } from "@/test/fixtures";
+import { makeUserData } from "@/test/seed-factories";
 
 beforeEach(resetGameplayTables);
 afterAll(() => db.$disconnect());

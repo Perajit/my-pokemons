@@ -10,8 +10,8 @@ vi.mock("@/hooks/use-polled-collection", () => ({
   usePolledCollection: vi.fn(),
 }));
 
-import type { UserPokemonDto } from "@/services/user-pokemon";
 import { usePolledCollection } from "@/hooks/use-polled-collection";
+import { makeUserPokemonDto } from "@/test/dto-factories";
 import { CollectionGrid } from "./collection-grid";
 
 const mockUsePolledCollection = vi.mocked(usePolledCollection);
@@ -21,26 +21,6 @@ beforeEach(() => {
     pokemons: initial,
   }));
 });
-
-function makePokemon(overrides: Partial<UserPokemonDto> = {}): UserPokemonDto {
-  return {
-    id: "up-1",
-    nickname: "Pikachu",
-    pokemon: { name: "Pikachu", pokeApiId: 25 },
-    currentFullness: 60,
-    currentMood: 60,
-    heart: 60,
-    activeStreak: 1,
-    isFainted: false,
-    acquiredAt: "2024-05-31T12:00:00Z",
-    faintedAt: null,
-    feedCooldownEndsAt: null,
-    playCooldownEndsAt: null,
-
-    earnedBondLevels: [],
-    ...overrides,
-  };
-}
 
 describe("CollectionGrid", () => {
   it("shows empty state with link to shop when no pokemons", () => {
@@ -56,12 +36,12 @@ describe("CollectionGrid", () => {
     render(
       <CollectionGrid
         initial={[
-          makePokemon({
+          makeUserPokemonDto({
             id: "up-1",
             nickname: "Pikachu",
             pokemon: { name: "Pikachu", pokeApiId: 25 },
           }),
-          makePokemon({
+          makeUserPokemonDto({
             id: "up-2",
             nickname: "Bulbasaur",
             pokemon: { name: "Bulbasaur", pokeApiId: 1 },
@@ -74,7 +54,7 @@ describe("CollectionGrid", () => {
   });
 
   it("shows the singular subtitle for exactly one pokemon", () => {
-    render(<CollectionGrid initial={[makePokemon()]} />);
+    render(<CollectionGrid initial={[makeUserPokemonDto()]} />);
     expect(screen.getByText("1 companion in your care.")).toBeInTheDocument();
   });
 
@@ -82,9 +62,9 @@ describe("CollectionGrid", () => {
     render(
       <CollectionGrid
         initial={[
-          makePokemon({ id: "up-1" }),
-          makePokemon({ id: "up-2" }),
-          makePokemon({ id: "up-3" }),
+          makeUserPokemonDto({ id: "up-1" }),
+          makeUserPokemonDto({ id: "up-2" }),
+          makeUserPokemonDto({ id: "up-3" }),
         ]}
       />,
     );

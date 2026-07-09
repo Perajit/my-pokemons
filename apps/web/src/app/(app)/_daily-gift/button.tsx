@@ -5,11 +5,19 @@ import { Gift } from "lucide-react";
 import type { DailyGiftStatusDto } from "@/services/user";
 import { DailyGiftModal } from "./modal";
 
-export function DailyGiftButton({ status }: { status: DailyGiftStatusDto }) {
+export function DailyGiftButton({
+  status,
+  onClaimed,
+}: {
+  status: DailyGiftStatusDto;
+  onClaimed: () => void;
+}) {
   const [open, setOpen] = useState(false);
-  const [claimed, setClaimed] = useState(false);
 
-  const showDot = status.availableNow && !claimed;
+  // Single source of truth: the dot follows the server's availableNow. The
+  // parent (AppHeader) optimistically flips it to false on claim and revalidates,
+  // so there is no local "claimed" flag to drift out of sync across days.
+  const showDot = status.availableNow;
 
   return (
     <>
@@ -30,7 +38,7 @@ export function DailyGiftButton({ status }: { status: DailyGiftStatusDto }) {
       <DailyGiftModal
         open={open}
         onClose={() => setOpen(false)}
-        onClaimed={() => setClaimed(true)}
+        onClaimed={onClaimed}
         status={status}
       />
     </>

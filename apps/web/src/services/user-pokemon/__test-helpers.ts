@@ -1,5 +1,5 @@
 import type { Pokemon } from "@my-pokemons/database";
-import { makePokemonData } from "@/test/fixtures";
+import { makePokemonData } from "@/test/seed-factories";
 
 // Shared test fixture: the one piece used by more than one sibling test file
 // (mappers.test.ts and bond-levels.test.ts). Single-use builders live in

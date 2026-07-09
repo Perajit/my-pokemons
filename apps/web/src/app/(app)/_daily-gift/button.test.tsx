@@ -5,8 +5,8 @@ import { screen, within } from "@testing-library/react";
 
 // Only system boundaries are mocked. The real DailyGiftModal is rendered so
 // these tests verify the actual integration — opening it, dismissing it, and
-// the optimistic dot update driven by the modal's onClaimed. The modal's own
-// animation/claim internals are covered in modal.test.tsx.
+// that collecting a gift notifies the parent via onClaimed. The dot itself now
+// follows the status prop (the parent owns that state — see app-header.test.tsx).
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock("./actions", () => ({ claimDailyGiftAction: vi.fn() }));
 
@@ -30,6 +30,13 @@ const claimedStatus: DailyGiftStatusDto = {
   nextGiftAvailableAt: "2026-06-15T00:00:00.000Z",
 };
 
+function renderButton(
+  status: DailyGiftStatusDto,
+  onClaimed: () => void = vi.fn(),
+) {
+  return setup(<DailyGiftButton status={status} onClaimed={onClaimed} />);
+}
+
 // Stale-safe query helpers (re-query on each call).
 const getGiftButton = () => screen.getByRole("button", { name: "Daily gift" });
 const getGiftDot = () => screen.getByLabelText("Gift available");
@@ -51,22 +58,33 @@ beforeEach(() => {
 
 describe("DailyGiftButton", () => {
   it("renders the gift icon button", () => {
-    setup(<DailyGiftButton status={claimedStatus} />);
+    renderButton(claimedStatus);
     expect(getGiftButton()).toBeInTheDocument();
   });
 
   it("shows an amber notification dot when the gift is available", () => {
-    setup(<DailyGiftButton status={availableStatus} />);
+    renderButton(availableStatus);
     expect(getGiftDot()).toBeInTheDocument();
   });
 
   it("shows no dot when the gift has already been claimed today", () => {
-    setup(<DailyGiftButton status={claimedStatus} />);
+    renderButton(claimedStatus);
     expect(queryGiftDot()).not.toBeInTheDocument();
   });
 
+  it("makes the dot follow the status prop as it changes", () => {
+    const { rerender } = renderButton(availableStatus);
+    expect(getGiftDot()).toBeInTheDocument();
+
+    rerender(<DailyGiftButton status={claimedStatus} onClaimed={vi.fn()} />);
+    expect(queryGiftDot()).not.toBeInTheDocument();
+
+    rerender(<DailyGiftButton status={availableStatus} onClaimed={vi.fn()} />);
+    expect(getGiftDot()).toBeInTheDocument();
+  });
+
   it("opens the modal when the button is clicked", async () => {
-    const { user } = setup(<DailyGiftButton status={availableStatus} />);
+    const { user } = renderButton(availableStatus);
 
     expect(queryDialog()).not.toBeInTheDocument();
     await user.click(getGiftButton());
@@ -75,7 +93,7 @@ describe("DailyGiftButton", () => {
   });
 
   it("closes the modal when it is dismissed", async () => {
-    const { user } = setup(<DailyGiftButton status={availableStatus} />);
+    const { user } = renderButton(availableStatus);
     await user.click(getGiftButton());
 
     await user.click(getCloseButton());
@@ -95,13 +113,13 @@ describe("DailyGiftButton", () => {
       giftAnimation.openMs = ANIM_DEFAULTS.openMs;
     });
 
-    it("hides the dot once the revealed gift is collected", async () => {
+    it("notifies the parent via onClaimed once the revealed gift is collected", async () => {
       mockClaim.mockResolvedValue({
         ok: true,
         data: { reward: { type: "coins", amount: 30 } },
       });
-      const { user } = setup(<DailyGiftButton status={availableStatus} />);
-      expect(getGiftDot()).toBeInTheDocument();
+      const onClaimed = vi.fn();
+      const { user } = renderButton(availableStatus, onClaimed);
 
       await user.click(getGiftButton());
       await user.click(getOpenGiftButton());
@@ -109,7 +127,7 @@ describe("DailyGiftButton", () => {
       await within(getDialog()).findByText("+30 coins");
       await user.click(getCollectButton());
 
-      expect(queryGiftDot()).not.toBeInTheDocument();
+      expect(onClaimed).toHaveBeenCalledOnce();
     });
   });
 });

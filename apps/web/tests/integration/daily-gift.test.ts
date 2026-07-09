@@ -8,7 +8,7 @@ import { getDailyGiftStatusDto, claimDailyGift } from "@/services/user";
 import { getUserCoins } from "@/services/user";
 import { getUserItemQuantity } from "@/services/inventory";
 import { seedUser, seedItem, resetGameplayTables } from "./db-helpers";
-import { makeUserData, makeItemData } from "@/test/fixtures";
+import { makeUserData, makeItemData } from "@/test/seed-factories";
 
 beforeEach(resetGameplayTables);
 afterAll(() => db.$disconnect());
