@@ -187,10 +187,12 @@ describe("getUserPokemonDto()", () => {
 
     const dto = await getUserPokemonDto(user.id, up.id);
 
-    // pokemon sub-object carries only display identity
+    // pokemon sub-object: display identity + species-level decay rates for client-side live decay
     expect(dto.pokemon).toEqual({
       name: pokemon.name,
       pokeApiId: pokemon.pokeApiId,
+      fullnessDecayPerHour: pokemon.fullnessDecayPerHour,
+      moodDecayPerHour: pokemon.moodDecayPerHour,
     });
     // dates are ISO strings
     expect(typeof dto.acquiredAt).toBe("string");
@@ -228,6 +230,8 @@ describe("getUserCollectionDto()", () => {
     expect(collection[0].pokemon).toEqual({
       name: pokemon.name,
       pokeApiId: pokemon.pokeApiId,
+      fullnessDecayPerHour: pokemon.fullnessDecayPerHour,
+      moodDecayPerHour: pokemon.moodDecayPerHour,
     });
     expect(collection[0]).not.toHaveProperty("lastFedAt");
     expect(collection[0]).not.toHaveProperty("feedCoinReward");

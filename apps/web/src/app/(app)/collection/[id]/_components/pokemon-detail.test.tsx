@@ -62,7 +62,12 @@ const mockUsePolledUserPokemon = vi.mocked(usePolledUserPokemon);
 // The detail view's tests assume a healthier default than the shared factory
 // (higher stats, longer streak, earlier acquiredAt); keep those defaults here as
 // a thin wrapper over the shared builder so the 20 call sites stay unchanged.
-function makePokemon(overrides: Partial<UserPokemonDto> = {}): UserPokemonDto {
+type PokemonDtoOverrides = Partial<
+  Omit<UserPokemonDto, "pokemon"> & {
+    pokemon: Partial<UserPokemonDto["pokemon"]>;
+  }
+>;
+function makePokemon(overrides: PokemonDtoOverrides = {}): UserPokemonDto {
   return makeUserPokemonDto({
     currentFullness: 80,
     currentMood: 70,
@@ -182,6 +187,41 @@ describe("PokemonDetail", () => {
     expect(
       screen.queryByRole("button", { name: "Play" }),
     ).not.toBeInTheDocument();
+  });
+
+  describe("when idle with decay rates", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2024-06-01T12:00:00Z"));
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("transitions to fainted state when both stats decay to zero", async () => {
+      // 1 unit of each stat, decaying at 3600/hr → hits 0 after exactly 1s
+      setupComponent({
+        initial: makePokemon({
+          isFainted: false,
+          currentFullness: 1,
+          currentMood: 1,
+          pokemon: { fullnessDecayPerHour: 3600, moodDecayPerHour: 3600 },
+          lastCalculatedAt: "2024-06-01T12:00:00Z",
+        }),
+      });
+
+      expect(screen.getByRole("button", { name: "Feed" })).toBeInTheDocument();
+
+      act(() => {
+        vi.advanceTimersByTime(1100);
+      });
+
+      expect(
+        screen.queryByRole("button", { name: "Feed" }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByText("Fainted")).toBeInTheDocument();
+    });
   });
 
   describe("when on cooldown", () => {

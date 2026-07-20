@@ -1,24 +1,6 @@
+import { useNow } from "@/context/now-provider";
 import { Button } from "@/components/ui/button";
 import type { Drumstick } from "lucide-react";
-import { useEffect, useState } from "react";
-
-function useCountdown(endsAt: Date | null): number {
-  const [now, setNow] = useState(() => Date.now());
-  const endsAtMs = endsAt?.getTime() ?? null;
-
-  useEffect(() => {
-    if (endsAtMs === null) {
-      return;
-    }
-    const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
-  }, [endsAtMs]);
-
-  if (endsAtMs === null) {
-    return 0;
-  }
-  return Math.max(0, Math.ceil((endsAtMs - now) / 1000));
-}
 
 function formatCountdown(seconds: number): string {
   const minutes = Math.floor(seconds / 60);
@@ -39,8 +21,11 @@ export function ActionButton({
   isPending: boolean;
   onClick: () => void;
 }) {
+  const now = useNow();
   const endsAt = cooldownEndsAt ? new Date(cooldownEndsAt) : null;
-  const remaining = useCountdown(endsAt);
+  const remaining = endsAt
+    ? Math.max(0, Math.ceil((endsAt.getTime() - now.getTime()) / 1000))
+    : 0;
   const onCooldown = remaining > 0;
   const disabled = onCooldown || isPending;
 

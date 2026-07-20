@@ -6,6 +6,13 @@ import { PokemonSprite } from "@/components/pokemon-sprite";
 import { Card, CardContent } from "@/components/ui/card";
 import { usePolledUserPokemon } from "@/hooks/use-polled-collection";
 import type { UserPokemonDto } from "@/services/user-pokemon";
+import { useNow } from "@/context/now-provider";
+import {
+  applyDecay,
+  calculateElapsedHours,
+  calculateHeart,
+  hasFainted,
+} from "@my-pokemons/core";
 import { ChevronLeft, Cookie, Hand } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -35,14 +42,30 @@ export function PokemonDetail({
 }) {
   const router = useRouter();
   const { pokemon, mutate } = usePolledUserPokemon(initial);
+  const now = useNow();
 
   const [feedPending, startFeedTransition] = useTransition();
   const [playPending, startPlayTransition] = useTransition();
   const [revivePending, startReviveTransition] = useTransition();
 
   const acquiredAt = new Date(pokemon.acquiredAt);
-  const fullness = Math.round(pokemon.currentFullness);
-  const mood = Math.round(pokemon.currentMood);
+  const elapsedHours = pokemon.isFainted
+    ? 0
+    : calculateElapsedHours(new Date(pokemon.lastCalculatedAt), now);
+  const liveFullness = applyDecay(
+    pokemon.currentFullness,
+    pokemon.pokemon.fullnessDecayPerHour,
+    elapsedHours,
+  );
+  const liveMood = applyDecay(
+    pokemon.currentMood,
+    pokemon.pokemon.moodDecayPerHour,
+    elapsedHours,
+  );
+  const liveHeart = calculateHeart(liveFullness, liveMood);
+  const liveIsFainted = pokemon.isFainted || hasFainted(liveFullness, liveMood);
+  const fullness = Math.round(liveFullness);
+  const mood = Math.round(liveMood);
 
   function handleFeed() {
     startFeedTransition(async () => {
@@ -121,11 +144,11 @@ export function PokemonDetail({
           </div>
           <BondLevelSteps earned={pokemon.earnedBondLevels} />
           <div className="border border-stone-300 w-full" />
-          {!pokemon.isFainted ? (
+          {!liveIsFainted ? (
             <>
               <div className="space-y-1">
                 <ActiveSteak activeStreak={pokemon.activeStreak} />
-                <HeartStatus size="md" value={pokemon.heart} />
+                <HeartStatus size="md" value={Math.round(liveHeart)} />
               </div>
               <div className="flex w-full flex-col gap-3">
                 <StatusBlock

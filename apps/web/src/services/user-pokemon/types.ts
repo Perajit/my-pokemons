@@ -5,6 +5,7 @@ export type UserPokemonSnapshot = {
   nickname: string | null;
   currentFullness: number;
   currentMood: number;
+  lastCalculatedAt: Date;
   acquiredAt: Date;
   faintedAt: Date | null;
   lastFedAt: Date | null;
@@ -16,6 +17,8 @@ export type UserPokemonSnapshot = {
     pokeApiId: number;
     feedCoinReward: number;
     playCoinReward: number;
+    fullnessDecayPerHour: number;
+    moodDecayPerHour: number;
   };
 };
 
@@ -24,6 +27,7 @@ export type UserPokemon = {
   nickname: string;
   currentFullness: number;
   currentMood: number;
+  lastCalculatedAt: Date;
   acquiredAt: Date;
   faintedAt: Date | null;
   lastFedAt: Date | null;
@@ -33,6 +37,8 @@ export type UserPokemon = {
     pokeApiId: number;
     feedCoinReward: number;
     playCoinReward: number;
+    fullnessDecayPerHour: number;
+    moodDecayPerHour: number;
   };
   heart: number;
   activeStreak: number;
@@ -79,9 +85,15 @@ export type GameplayActionResult = {
 export type UserPokemonDto = {
   id: string;
   nickname: string;
-  pokemon: { name: string; pokeApiId: number };
+  pokemon: {
+    name: string;
+    pokeApiId: number;
+    fullnessDecayPerHour: number;
+    moodDecayPerHour: number;
+  };
   currentFullness: number;
   currentMood: number;
+  lastCalculatedAt: string;
   heart: number;
   activeStreak: number;
   isFainted: boolean;

@@ -9,6 +9,7 @@ function makeUserPokemon(overrides: Partial<UserPokemon> = {}): UserPokemon {
     nickname: "Sparky",
     currentFullness: 60,
     currentMood: 60,
+    lastCalculatedAt: new Date("2024-05-31T12:00:00Z"),
     faintedAt: null,
     lastFedAt: null,
     lastPlayedAt: null,
@@ -32,6 +33,7 @@ function makeSnapshot(
     nickname: null,
     currentFullness: 60,
     currentMood: 60,
+    lastCalculatedAt: new Date("2024-05-31T12:00:00Z"),
     acquiredAt: new Date("2024-05-31T12:00:00Z"),
     faintedAt: null,
     lastFedAt: null,
@@ -98,5 +100,14 @@ describe("toUserPokemonDto()", () => {
   it("passes the nickname through to the DTO", () => {
     const result = toUserPokemonDto(makeUserPokemon({ nickname: "Sparky" }));
     expect(result.nickname).toBe("Sparky");
+  });
+
+  it("passes decay rates (in pokemon) and lastCalculatedAt through to the DTO", () => {
+    const result = toUserPokemonDto(makeUserPokemon());
+    expect(result.pokemon.fullnessDecayPerHour).toBe(
+      basePokemon.fullnessDecayPerHour,
+    );
+    expect(result.pokemon.moodDecayPerHour).toBe(basePokemon.moodDecayPerHour);
+    expect(result.lastCalculatedAt).toBe("2024-05-31T12:00:00.000Z");
   });
 });

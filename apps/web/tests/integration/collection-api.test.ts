@@ -49,6 +49,8 @@ describe("GET /api/collection", () => {
     expect(body[0].pokemon).toEqual({
       name: pokemon.name,
       pokeApiId: pokemon.pokeApiId,
+      fullnessDecayPerHour: pokemon.fullnessDecayPerHour,
+      moodDecayPerHour: pokemon.moodDecayPerHour,
     });
     expect(body[0]).not.toHaveProperty("lastFedAt");
     expect(body[0]).not.toHaveProperty("feedCoinReward");

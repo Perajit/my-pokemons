@@ -2,6 +2,7 @@ import { render } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { SWRConfig } from "swr";
 import type { ReactElement, ReactNode } from "react";
+import { NowProvider } from "@/context/now-provider";
 
 // RTL's documented setup pattern: userEvent.setup() must run per test, before
 // any interaction, so bundle it with render. Returns the user session alongside
@@ -9,7 +10,10 @@ import type { ReactElement, ReactNode } from "react";
 // userEvent.setup() should be called — tests and per-file setup helpers compose
 // this rather than calling userEvent.setup() themselves.
 export function setup(ui: ReactElement) {
-  return { user: userEvent.setup(), ...render(ui) };
+  return {
+    user: userEvent.setup(),
+    ...render(<NowProvider>{ui}</NowProvider>),
+  };
 }
 
 // Black-box SWR rendering: a fresh cache per test (provider) so mutations don't
@@ -21,15 +25,17 @@ export function setup(ui: ReactElement) {
 export function renderWithSwr(ui: ReactElement) {
   function Wrapper({ children }: { children: ReactNode }) {
     return (
-      <SWRConfig
-        value={{
-          provider: () => new Map(),
-          dedupingInterval: 0,
-          focusThrottleInterval: 0,
-        }}
-      >
-        {children}
-      </SWRConfig>
+      <NowProvider>
+        <SWRConfig
+          value={{
+            provider: () => new Map(),
+            dedupingInterval: 0,
+            focusThrottleInterval: 0,
+          }}
+        >
+          {children}
+        </SWRConfig>
+      </NowProvider>
     );
   }
   return render(ui, { wrapper: Wrapper });

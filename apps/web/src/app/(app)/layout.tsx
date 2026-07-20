@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { Pokeball } from "@/components/pokeball";
 import { PokeballBackground } from "@/components/pokeball-background";
 import { getMeDto } from "@/services/me";
+import { AppProviders } from "./_components/app-providers";
 import { NavLinks } from "./_components/nav-links";
 import { AppHeader } from "./_components/app-header";
 
@@ -37,7 +38,7 @@ export default async function AppLayout({
         </div>
       </header>
       <main className="relative z-10 mx-auto max-w-6xl px-4 py-6 sm:py-8">
-        {children}
+        <AppProviders>{children}</AppProviders>
       </main>
     </div>
   );

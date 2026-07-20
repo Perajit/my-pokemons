@@ -47,6 +47,7 @@ export async function revivePokemon(
       nickname: entity.nickname,
       currentFullness: REVIVE_RESTORE_VALUE,
       currentMood: REVIVE_RESTORE_VALUE,
+      lastCalculatedAt: now,
       acquiredAt: entity.acquiredAt,
       faintedAt: null,
       lastFedAt: entity.lastFedAt,
@@ -58,6 +59,8 @@ export async function revivePokemon(
         pokeApiId: entity.pokemon.pokeApiId,
         feedCoinReward: entity.pokemon.feedCoinReward,
         playCoinReward: entity.pokemon.playCoinReward,
+        fullnessDecayPerHour: entity.pokemon.fullnessDecayPerHour,
+        moodDecayPerHour: entity.pokemon.moodDecayPerHour,
       },
     };
 

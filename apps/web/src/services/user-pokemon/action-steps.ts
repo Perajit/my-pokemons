@@ -145,6 +145,7 @@ export function buildPostActionUserPokemon(
     nickname: entity.nickname,
     currentFullness: updatedStats.currentFullness,
     currentMood: updatedStats.currentMood,
+    lastCalculatedAt: now,
     acquiredAt: entity.acquiredAt,
     faintedAt: null,
     lastFedAt: lastActionField === "lastFedAt" ? now : entity.lastFedAt,
@@ -157,6 +158,8 @@ export function buildPostActionUserPokemon(
       pokeApiId: entity.pokemon.pokeApiId,
       feedCoinReward: entity.pokemon.feedCoinReward,
       playCoinReward: entity.pokemon.playCoinReward,
+      fullnessDecayPerHour: entity.pokemon.fullnessDecayPerHour,
+      moodDecayPerHour: entity.pokemon.moodDecayPerHour,
     },
   };
   return toUserPokemon(snapshot, now);

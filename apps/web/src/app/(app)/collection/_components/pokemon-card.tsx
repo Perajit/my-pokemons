@@ -1,12 +1,36 @@
+"use client";
+
 import { PokemonSprite } from "@/components/pokemon-sprite";
 import { Card, CardContent } from "@/components/ui/card";
+import { useNow } from "@/context/now-provider";
 import type { UserPokemonDto } from "@/services/user-pokemon";
+import {
+  applyDecay,
+  calculateElapsedHours,
+  calculateHeart,
+  hasFainted,
+} from "@my-pokemons/core";
 import Link from "next/link";
 import { FaintedBadge } from "./fainted-badge";
 import { HeartStatus } from "./heart-status";
 
 export function PokemonCard({ pokemon }: { pokemon: UserPokemonDto }) {
-  const heart = Math.round(pokemon.heart);
+  const now = useNow();
+  const elapsedHours = pokemon.isFainted
+    ? 0
+    : calculateElapsedHours(new Date(pokemon.lastCalculatedAt), now);
+  const liveFullness = applyDecay(
+    pokemon.currentFullness,
+    pokemon.pokemon.fullnessDecayPerHour,
+    elapsedHours,
+  );
+  const liveMood = applyDecay(
+    pokemon.currentMood,
+    pokemon.pokemon.moodDecayPerHour,
+    elapsedHours,
+  );
+  const liveHeart = Math.round(calculateHeart(liveFullness, liveMood));
+  const liveIsFainted = pokemon.isFainted || hasFainted(liveFullness, liveMood);
 
   return (
     <Link
@@ -24,8 +48,8 @@ export function PokemonCard({ pokemon }: { pokemon: UserPokemonDto }) {
           <h3 className="font-heading text-base font-medium text-stone-700">
             {pokemon.nickname}
           </h3>
-          {!pokemon.isFainted ? (
-            <HeartStatus size="sm" value={heart} />
+          {!liveIsFainted ? (
+            <HeartStatus size="sm" value={liveHeart} />
           ) : (
             <div className="flex flex-col items-start gap-1 sm:items-center">
               <FaintedBadge size="sm" />
