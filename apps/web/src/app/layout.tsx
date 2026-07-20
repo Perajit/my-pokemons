@@ -27,7 +27,7 @@ export default function RootLayout({
     <html lang="en" className={`${nunito.variable} ${fredoka.variable}`}>
       <body className="antialiased">
         {children}
-        <Toaster richColors />
+        <Toaster richColors expand />
       </body>
     </html>
   );
